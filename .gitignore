@@ -21,3 +21,6 @@ Thumbs.db
 
 # Database
 *.db
+
+# Uploaded photo evidence (local dev storage)
+backend/uploads/

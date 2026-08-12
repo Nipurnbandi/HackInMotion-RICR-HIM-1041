@@ -1,33 +1,72 @@
-import { useEffect, useState } from "react";
-import "./App.css";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider, useAuth } from "./auth/AuthContext";
+import Login from "./auth/Login";
+import Signup from "./auth/Signup";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import CitizenLayout from "./citizen/components/CitizenLayout";
+import CitizenDashboard from "./citizen/pages/CitizenDashboard";
+import Help from "./citizen/pages/Help";
+import IssueDetails from "./citizen/pages/IssueDetails";
+import MyReports from "./citizen/pages/MyReports";
+import Profile from "./citizen/pages/Profile";
+import ReportIssue from "./citizen/pages/ReportIssue";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import RoleRoute from "./routes/RoleRoute";
+import { getDashboardPath } from "./services/api";
 
-function App() {
-  const [health, setHealth] = useState(null);
-  const [error, setError] = useState(null);
+function HomeRedirect() {
+  const { isAuthenticated, role, loading } = useAuth();
 
-  useEffect(() => {
-    fetch("/api/health")
-      .then((res) => {
-        if (!res.ok) throw new Error("API unreachable");
-        return res.json();
-      })
-      .then(setHealth)
-      .catch((err) => setError(err.message));
-  }, []);
+  if (loading) {
+    return <p style={{ padding: "2rem", textAlign: "center" }}>Loading...</p>;
+  }
 
-  return (
-    <main className="app">
-      <h1>Hack</h1>
-      <p>FastAPI + React starter</p>
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-      <section className="status-card">
-        <h2>Backend status</h2>
-        {error && <p className="error">{error}</p>}
-        {health && <p className="success">API is {health.status}</p>}
-        {!health && !error && <p>Checking...</p>}
-      </section>
-    </main>
-  );
+  return <Navigate to={getDashboardPath(role)} replace />;
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+
+          <Route element={<ProtectedRoute />}>
+            <Route
+              path="/citizen"
+              element={
+                <RoleRoute allowedRole="CITIZEN">
+                  <CitizenLayout />
+                </RoleRoute>
+              }
+            >
+              <Route index element={<CitizenDashboard />} />
+              <Route path="report" element={<ReportIssue />} />
+              <Route path="issues" element={<MyReports />} />
+              <Route path="issues/:issueId" element={<IssueDetails />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="help" element={<Help />} />
+            </Route>
+
+            <Route
+              path="/admin"
+              element={
+                <RoleRoute allowedRole="ADMIN">
+                  <AdminDashboard />
+                </RoleRoute>
+              }
+            />
+          </Route>
+
+          <Route path="/" element={<HomeRedirect />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}

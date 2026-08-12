@@ -1,0 +1,65 @@
+/* Admin-only additions on top of tokens.css + citizen.css. */
+
+.admin-account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+/* Case rows are informational (not links) for now. */
+.admin-case {
+  cursor: default;
+}
+
+.priority-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.6rem;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.priority-badge small {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.priority-badge--high {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.priority-badge--medium {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.priority-badge--low {
+  background: var(--color-neutral-soft);
+  color: var(--color-neutral);
+}
+
+.case-meta {
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.case-meta--muted {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.stat-card--neutral {
+  border-left-color: var(--color-neutral);
+}
