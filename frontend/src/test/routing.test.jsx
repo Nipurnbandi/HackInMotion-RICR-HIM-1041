@@ -11,7 +11,7 @@ import CitizenDashboard from "../citizen/pages/CitizenDashboard";
 import AdminDashboard from "../admin/pages/AdminDashboard";
 import { getDashboardPath } from "../services/api";
 import * as apiModule from "../services/api";
-import { issueService } from "../citizen/services/issueService";
+import { citizenService } from "../citizen/services/citizenService";
 
 vi.mock("../services/api", async () => {
   const actual = await vi.importActual("../services/api");
@@ -26,8 +26,8 @@ vi.mock("../services/api", async () => {
   };
 });
 
-vi.mock("../citizen/services/issueService", () => ({
-  issueService: {
+vi.mock("../citizen/services/citizenService", () => ({
+  citizenService: {
     getDashboard: vi.fn(),
     getStats: vi.fn(),
     listIssues: vi.fn(),
@@ -97,7 +97,7 @@ describe("Frontend routing", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     apiModule.api.getMe.mockRejectedValue(new Error("unauthenticated"));
-    issueService.getDashboard.mockResolvedValue(EMPTY_DASHBOARD);
+    citizenService.getDashboard.mockResolvedValue(EMPTY_DASHBOARD);
   });
 
   it("redirects unauthenticated user from /citizen to /login", async () => {

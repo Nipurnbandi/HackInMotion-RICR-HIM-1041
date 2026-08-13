@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import admin, auth, citizen, users
+from app.api import admin, auth, citizen
 from app.core.config import settings
 
 app = FastAPI(title=settings.app_name, debug=settings.debug)
@@ -26,7 +26,6 @@ app.mount(
 )
 
 app.include_router(auth.router, prefix="/api")
-app.include_router(users.router, prefix="/api")
 app.include_router(citizen.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 

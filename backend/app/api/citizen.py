@@ -11,14 +11,14 @@ from app.core.dependencies import require_roles
 from app.core.issue_types import IssueStatus
 from app.core.roles import Role
 from app.models import User
-from app.schemas.issue import (
+from app.schemas.citizen import (
     CitizenDashboardResponse,
     IssueCreate,
     IssueListResponse,
     IssueResponse,
     IssueStats,
 )
-from app.services.issue import (
+from app.services.citizen import (
     create_citizen_issue,
     get_citizen_dashboard,
     get_citizen_issue,

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CATEGORIES, STATUSES } from "../constants";
+import { CATEGORIES, STATUSES } from "../../shared/constants";
 
 export default function Help() {
   return (

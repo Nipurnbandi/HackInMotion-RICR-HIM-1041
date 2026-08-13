@@ -30,8 +30,8 @@ vi.mock("../citizen/services/geocoding", async () => {
   return { ...actual, reverseGeocode: vi.fn() };
 });
 
-vi.mock("../citizen/services/issueService", () => ({
-  issueService: {
+vi.mock("../citizen/services/citizenService", () => ({
+  citizenService: {
     createIssue: vi.fn(),
     listIssues: vi.fn(),
     getIssue: vi.fn(),
@@ -41,7 +41,7 @@ vi.mock("../citizen/services/issueService", () => ({
 }));
 
 import ReportIssue from "../citizen/pages/ReportIssue";
-import { issueService } from "../citizen/services/issueService";
+import { citizenService } from "../citizen/services/citizenService";
 import { reverseGeocode } from "../citizen/services/geocoding";
 import { mapHandlers } from "./mapHandlers.js";
 
@@ -285,14 +285,14 @@ describe("ReportIssue", () => {
       '.form-card__actions button[type="submit"]'
     );
     expect(submitButtons).toHaveLength(0);
-    expect(issueService.createIssue).not.toHaveBeenCalled();
+    expect(citizenService.createIssue).not.toHaveBeenCalled();
     expect(
       await screen.findByRole("button", { name: "Submit report" })
     ).toBeInTheDocument();
   });
 
   it("submits the report and shows the tracking ID", async () => {
-    issueService.createIssue.mockResolvedValue({
+    citizenService.createIssue.mockResolvedValue({
       id: 42,
       tracking_id: "SMC-2026-000042",
       status: "SUBMITTED",
@@ -314,7 +314,7 @@ describe("ReportIssue", () => {
       "/citizen/issues"
     );
 
-    const [values] = issueService.createIssue.mock.calls[0];
+    const [values] = citizenService.createIssue.mock.calls[0];
     expect(values).toMatchObject({
       category: "POTHOLE",
       description: DESCRIPTION,
@@ -332,7 +332,7 @@ describe("ReportIssue", () => {
       "We couldn't submit your report. Please check your connection and try again."
     );
     networkError.isNetworkError = true;
-    issueService.createIssue.mockRejectedValue(networkError);
+    citizenService.createIssue.mockRejectedValue(networkError);
 
     const user = userEvent.setup();
     renderPage();
@@ -349,7 +349,7 @@ describe("ReportIssue", () => {
     const validationError = new Error("Please correct the highlighted fields.");
     validationError.status = 422;
     validationError.fieldErrors = { description: "Description is too short." };
-    issueService.createIssue.mockRejectedValue(validationError);
+    citizenService.createIssue.mockRejectedValue(validationError);
 
     const user = userEvent.setup();
     renderPage();

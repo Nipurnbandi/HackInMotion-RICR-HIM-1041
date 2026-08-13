@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import IssueCard from "../components/IssueCard";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
-import { issueService } from "../services/issueService";
+import { EmptyState, ErrorState, LoadingState } from "../../shared/components/States";
+import { citizenService } from "../services/citizenService";
 
 function greeting(date = new Date()) {
   const hour = date.getHours();
@@ -29,7 +29,7 @@ export default function CitizenDashboard() {
     setLoading(true);
     setError("");
     try {
-      setData(await issueService.getDashboard());
+      setData(await citizenService.getDashboard());
     } catch (err) {
       setError(err.message || "We couldn't load your dashboard.");
     } finally {

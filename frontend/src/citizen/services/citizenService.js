@@ -55,7 +55,7 @@ function buildQuery(params) {
   return string ? `?${string}` : "";
 }
 
-export const issueService = {
+export const citizenService = {
   getDashboard: () => request("/citizen/dashboard"),
 
   getStats: () => request("/citizen/issues/stats"),

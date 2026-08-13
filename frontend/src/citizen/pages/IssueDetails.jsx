@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import IssueLocationMap from "../components/IssueLocationMap";
-import StatusBadge from "../components/StatusBadge";
+import StatusBadge from "../../shared/components/StatusBadge";
 import StatusTimeline from "../components/StatusTimeline";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
-import { categoryIcon, categoryLabel } from "../constants";
+import { EmptyState, ErrorState, LoadingState } from "../../shared/components/States";
+import { categoryIcon, categoryLabel } from "../../shared/constants";
 import { formatCoordinates } from "../services/geocoding";
-import { issueService } from "../services/issueService";
+import { citizenService } from "../services/citizenService";
 
 function formatDateTime(value) {
   if (!value) return "";
@@ -31,7 +31,7 @@ export default function IssueDetails() {
     setError("");
     setNotFound(false);
     try {
-      setIssue(await issueService.getIssue(issueId));
+      setIssue(await citizenService.getIssue(issueId));
     } catch (err) {
       if (err.status === 404) setNotFound(true);
       else setError(err.message || "We couldn't load this report.");

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { categoryIcon, categoryLabel } from "../constants";
-import StatusBadge from "./StatusBadge";
+import { categoryIcon, categoryLabel } from "../../shared/constants";
+import StatusBadge from "../../shared/components/StatusBadge";
 
 function formatDate(value) {
   if (!value) return "";

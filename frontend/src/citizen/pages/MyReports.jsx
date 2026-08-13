@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import IssueCard from "../components/IssueCard";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
-import { issueService } from "../services/issueService";
+import { EmptyState, ErrorState, LoadingState } from "../../shared/components/States";
+import { citizenService } from "../services/citizenService";
 
 const FILTERS = [
   { value: "", label: "All" },
@@ -37,7 +37,7 @@ export default function MyReports() {
     setError("");
     try {
       setData(
-        await issueService.listIssues({
+        await citizenService.listIssues({
           status: status || undefined,
           search: debouncedSearch || undefined,
           page,

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+﻿from datetime import datetime, timedelta, timezone
 
 from jose import jwt
 
@@ -59,7 +59,7 @@ def test_invalid_password(client, citizen_user):
 
 def test_invalid_token(client):
     response = client.get(
-        "/api/users/me",
+        "/api/auth/me",
         headers={"Authorization": "Bearer invalid-token"},
     )
     assert response.status_code == 401
@@ -75,7 +75,7 @@ def test_expired_token(client, citizen_user):
     }
     token = jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
     response = client.get(
-        "/api/users/me",
+        "/api/auth/me",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 401
@@ -127,6 +127,7 @@ def test_unauthenticated_cannot_access_protected(client):
 
 
 def test_users_me(client, citizen_user):
-    response = client.get("/api/users/me", headers=auth_header(citizen_user))
+    response = client.get("/api/auth/me", headers=auth_header(citizen_user))
     assert response.status_code == 200
     assert response.json()["email"] == "citizen@example.com"
+

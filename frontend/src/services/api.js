@@ -40,7 +40,7 @@ export const api = {
 
   logout: () => request("/auth/logout", { method: "POST" }),
 
-  getMe: () => request("/users/me"),
+  getMe: () => request("/auth/me"),
 };
 
 export function getDashboardPath(role) {

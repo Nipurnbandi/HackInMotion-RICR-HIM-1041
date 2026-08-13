@@ -3,14 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import CategorySelector from "../components/CategorySelector";
 import ImageUploader from "../components/ImageUploader";
 import LocationPicker from "../components/LocationPicker";
-import StatusBadge from "../components/StatusBadge";
+import StatusBadge from "../../shared/components/StatusBadge";
 import {
   CATEGORY_BY_VALUE,
   DESCRIPTION_MAX_LENGTH,
   DESCRIPTION_MIN_LENGTH,
-} from "../constants";
+} from "../../shared/constants";
 import { formatCoordinates } from "../services/geocoding";
-import { issueService } from "../services/issueService";
+import { citizenService } from "../services/citizenService";
 
 const STEPS = [
   { id: "category", title: "What is the problem?" },
@@ -103,7 +103,7 @@ export default function ReportIssue() {
     setProgress(photo ? 0 : null);
 
     try {
-      const issue = await issueService.createIssue(
+      const issue = await citizenService.createIssue(
         {
           category,
           description: trimmedDescription,

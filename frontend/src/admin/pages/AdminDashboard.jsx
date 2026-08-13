@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
-import StatusBadge from "../../citizen/components/StatusBadge";
-import { EmptyState, ErrorState, LoadingState } from "../../citizen/components/States";
-import { categoryIcon, categoryLabel } from "../../citizen/constants";
+import StatusBadge from "../../shared/components/StatusBadge";
+import { EmptyState, ErrorState, LoadingState } from "../../shared/components/States";
+import { categoryIcon, categoryLabel } from "../../shared/constants";
 import { adminService } from "../services/adminService";
 import "../../styles/tokens.css";
 import "../../styles/citizen.css";

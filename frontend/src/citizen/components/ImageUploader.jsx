@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ACCEPTED_PHOTO_TYPES, MAX_PHOTO_BYTES } from "../constants";
+import { ACCEPTED_PHOTO_TYPES, MAX_PHOTO_BYTES } from "../../shared/constants";
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;

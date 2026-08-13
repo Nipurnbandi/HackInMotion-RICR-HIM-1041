@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
-import { LoadingState } from "../components/States";
-import { issueService } from "../services/issueService";
+import { LoadingState } from "../../shared/components/States";
+import { citizenService } from "../services/citizenService";
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -12,7 +12,7 @@ export default function Profile() {
 
   useEffect(() => {
     let cancelled = false;
-    issueService
+    citizenService
       .getStats()
       .then((result) => !cancelled && setStats(result))
       .catch(() => !cancelled && setStats(null))

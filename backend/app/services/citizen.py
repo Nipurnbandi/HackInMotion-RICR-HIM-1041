@@ -17,7 +17,7 @@ from app.core.issue_types import (
 )
 from app.core.storage import Storage, get_storage
 from app.models import Issue, User
-from app.schemas.issue import IssueCreate, IssueResponse
+from app.schemas.citizen import IssueCreate, IssueResponse
 
 TRACKING_ID_PREFIX = "SMC"
 CASE_ID_PREFIX = "CASE"

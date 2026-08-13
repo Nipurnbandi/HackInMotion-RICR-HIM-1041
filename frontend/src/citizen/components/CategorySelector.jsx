@@ -1,4 +1,4 @@
-import { CATEGORIES } from "../constants";
+import { CATEGORIES } from "../../shared/constants";
 
 export default function CategorySelector({ value, onChange, error, describedBy }) {
   const errorId = error ? "category-error" : undefined;

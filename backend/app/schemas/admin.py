@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from app.core.issue_types import IssueStatus
-from app.schemas.issue import DESCRIPTION_MAX_LENGTH, IssueResponse
+from app.schemas.citizen import DESCRIPTION_MAX_LENGTH, IssueResponse
 
 
 class AdminDashboardResponse(BaseModel):

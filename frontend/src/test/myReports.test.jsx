@@ -16,8 +16,8 @@ vi.mock("react-leaflet", () => ({
   ),
 }));
 
-vi.mock("../citizen/services/issueService", () => ({
-  issueService: {
+vi.mock("../citizen/services/citizenService", () => ({
+  citizenService: {
     listIssues: vi.fn(),
     getIssue: vi.fn(),
     getDashboard: vi.fn(),
@@ -29,7 +29,7 @@ vi.mock("../citizen/services/issueService", () => ({
 import CitizenDashboard from "../citizen/pages/CitizenDashboard";
 import IssueDetails from "../citizen/pages/IssueDetails";
 import MyReports from "../citizen/pages/MyReports";
-import { issueService } from "../citizen/services/issueService";
+import { citizenService } from "../citizen/services/citizenService";
 
 vi.mock("../auth/AuthContext", () => ({
   useAuth: () => ({
@@ -80,14 +80,14 @@ describe("MyReports", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("shows a loading state while fetching", () => {
-    issueService.listIssues.mockReturnValue(new Promise(() => {}));
+    citizenService.listIssues.mockReturnValue(new Promise(() => {}));
     renderReports();
 
     expect(screen.getByRole("status")).toHaveTextContent(/Loading your reports/i);
   });
 
   it("renders reports returned by the API", async () => {
-    issueService.listIssues.mockResolvedValue({
+    citizenService.listIssues.mockResolvedValue({
       items: [ISSUE],
       total: 1,
       page: 1,
@@ -109,7 +109,7 @@ describe("MyReports", () => {
   });
 
   it("shows an empty state when the citizen has no reports", async () => {
-    issueService.listIssues.mockResolvedValue({
+    citizenService.listIssues.mockResolvedValue({
       items: [],
       total: 0,
       page: 1,
@@ -125,14 +125,14 @@ describe("MyReports", () => {
   });
 
   it("shows an error state with a retry action", async () => {
-    issueService.listIssues.mockRejectedValue(new Error("Network is unavailable."));
+    citizenService.listIssues.mockRejectedValue(new Error("Network is unavailable."));
     renderReports();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /Network is unavailable/i
     );
 
-    issueService.listIssues.mockResolvedValue({
+    citizenService.listIssues.mockResolvedValue({
       items: [ISSUE],
       total: 1,
       page: 1,
@@ -144,7 +144,7 @@ describe("MyReports", () => {
   });
 
   it("filters by status through the API", async () => {
-    issueService.listIssues.mockResolvedValue({
+    citizenService.listIssues.mockResolvedValue({
       items: [],
       total: 0,
       page: 1,
@@ -157,14 +157,14 @@ describe("MyReports", () => {
     await userEvent.click(screen.getByRole("button", { name: "Resolved" }));
 
     await waitFor(() => {
-      expect(issueService.listIssues).toHaveBeenLastCalledWith(
+      expect(citizenService.listIssues).toHaveBeenLastCalledWith(
         expect.objectContaining({ status: "RESOLVED" })
       );
     });
   });
 
   it("searches through the API", async () => {
-    issueService.listIssues.mockResolvedValue({
+    citizenService.listIssues.mockResolvedValue({
       items: [],
       total: 0,
       page: 1,
@@ -178,7 +178,7 @@ describe("MyReports", () => {
 
     await waitFor(
       () => {
-        expect(issueService.listIssues).toHaveBeenLastCalledWith(
+        expect(citizenService.listIssues).toHaveBeenLastCalledWith(
           expect.objectContaining({ search: "nehru" })
         );
       },
@@ -191,11 +191,11 @@ describe("IssueDetails", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("loads a single report from the API", async () => {
-    issueService.getIssue.mockResolvedValue(ISSUE);
+    citizenService.getIssue.mockResolvedValue(ISSUE);
     renderDetails();
 
     expect(await screen.findByText("SMC-2026-000007")).toBeInTheDocument();
-    expect(issueService.getIssue).toHaveBeenCalledWith("7");
+    expect(citizenService.getIssue).toHaveBeenCalledWith("7");
     expect(screen.getByText("Large pothole near the main road.")).toBeInTheDocument();
     expect(screen.getByText("23.259900, 77.412600")).toBeInTheDocument();
     expect(screen.getByTestId("marker")).toHaveAttribute(
@@ -205,7 +205,7 @@ describe("IssueDetails", () => {
   });
 
   it("renders the photo evidence with meaningful alt text", async () => {
-    issueService.getIssue.mockResolvedValue(ISSUE);
+    citizenService.getIssue.mockResolvedValue(ISSUE);
     renderDetails();
 
     const photo = await screen.findByRole("img", { name: /Photo evidence submitted/i });
@@ -213,7 +213,7 @@ describe("IssueDetails", () => {
   });
 
   it("marks the current status on the timeline", async () => {
-    issueService.getIssue.mockResolvedValue(ISSUE);
+    citizenService.getIssue.mockResolvedValue(ISSUE);
     renderDetails();
 
     const timeline = await screen.findByRole("list", { name: "Report progress" });
@@ -224,7 +224,7 @@ describe("IssueDetails", () => {
   it("shows a not-found state for someone else's report", async () => {
     const error = new Error("Issue not found");
     error.status = 404;
-    issueService.getIssue.mockRejectedValue(error);
+    citizenService.getIssue.mockRejectedValue(error);
 
     renderDetails(999);
 
@@ -237,7 +237,7 @@ describe("CitizenDashboard", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("shows a loading state, then real statistics", async () => {
-    issueService.getDashboard.mockResolvedValue({
+    citizenService.getDashboard.mockResolvedValue({
       message: "Welcome",
       role: "CITIZEN",
       email: "citizen@example.com",
@@ -268,7 +268,7 @@ describe("CitizenDashboard", () => {
   });
 
   it("shows an empty state when nothing has been reported", async () => {
-    issueService.getDashboard.mockResolvedValue({
+    citizenService.getDashboard.mockResolvedValue({
       message: "Welcome",
       role: "CITIZEN",
       email: "citizen@example.com",

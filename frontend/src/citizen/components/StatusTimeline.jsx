@@ -1,4 +1,4 @@
-import { STATUS_BY_VALUE, STATUS_FLOW } from "../constants";
+import { STATUS_BY_VALUE, STATUS_FLOW } from "../../shared/constants";
 
 export default function StatusTimeline({ status }) {
   if (status === "REJECTED") {
