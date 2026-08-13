@@ -70,8 +70,45 @@ class Issue(Base, TimestampMixin):
     case_id: Mapped[str | None] = mapped_column(String(32), index=True, default=None)
     is_primary: Mapped[bool] = mapped_column(default=True, server_default=true())
 
+    department_id: Mapped[int | None] = mapped_column(
+        ForeignKey("departments.id"), index=True, default=None
+    )
+
     reporter: Mapped[User] = relationship(back_populates="issues")
+    department: Mapped["Department"] = relationship()
 
     __table_args__ = (
         Index("ix_issues_dup_lookup", "category", "latitude", "longitude"),
+    )
+
+
+class Department(Base, TimestampMixin):
+    __tablename__ = "departments"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255))
+
+
+class CategoryRoute(Base, TimestampMixin):
+    __tablename__ = "category_routes"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    category: Mapped[IssueCategory] = mapped_column(
+        Enum(IssueCategory, name="issue_category", native_enum=False), unique=True
+    )
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
+
+
+class Notification(Base, TimestampMixin):
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"), index=True)
+    issue_id: Mapped[int] = mapped_column(ForeignKey("issues.id", ondelete="CASCADE"))
+    message: Mapped[str] = mapped_column(Text)
+    is_read: Mapped[bool] = mapped_column(default=False, server_default="false")
+    sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
     )

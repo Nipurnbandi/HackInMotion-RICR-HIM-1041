@@ -1,9 +1,12 @@
 const API_BASE = "/api";
 
-async function request(path) {
+async function request(path, options = {}) {
   let response;
   try {
-    response = await fetch(`${API_BASE}${path}`, { credentials: "include" });
+    response = await fetch(`${API_BASE}${path}`, {
+      credentials: "include",
+      ...options,
+    });
   } catch {
     const error = new Error(
       "We couldn't reach the server. Please check your connection and try again."
@@ -29,5 +32,13 @@ async function request(path) {
 export const adminService = {
   getDashboard: () => request("/admin/dashboard"),
 
-  listCases: () => request("/admin/issues"),
+  getDepartments: () => request("/admin/departments"),
+
+  listCases: (department) =>
+    request(`/admin/issues${department ? `?department=${department}` : ""}`),
+
+  getNotifications: () => request("/admin/notifications"),
+
+  markNotificationRead: (id) =>
+    request(`/admin/notifications/${id}/read`, { method: "POST" }),
 };

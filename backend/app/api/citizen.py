@@ -1,6 +1,15 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    Query,
+    UploadFile,
+    status,
+)
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -28,6 +37,7 @@ from app.services.citizen import (
     list_citizen_issues,
     validate_photo,
 )
+from app.services.notification import notify_new_case, send_pending_notifications
 
 router = APIRouter(prefix="/citizen", tags=["citizen"])
 
@@ -82,6 +92,7 @@ def citizen_issue_stats(
     "/issues", response_model=IssueResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_issue(
+    background_tasks: BackgroundTasks,
     data: Annotated[IssueCreate, Depends(parse_issue_form)],
     photo: Annotated[UploadFile | None, File()] = None,
     current_user: User = Depends(citizen_only),
@@ -98,13 +109,19 @@ async def create_issue(
             declared_content_type=photo.content_type,
         )
 
-    return create_citizen_issue(
+    issue = create_citizen_issue(
         db,
         current_user,
         data,
         photo_bytes=photo_bytes,
         photo_extension=photo_extension,
     )
+
+    if issue.is_primary:
+        notify_new_case(db, issue)
+        background_tasks.add_task(send_pending_notifications)
+
+    return issue
 
 
 @router.get("/issues", response_model=IssueListResponse)

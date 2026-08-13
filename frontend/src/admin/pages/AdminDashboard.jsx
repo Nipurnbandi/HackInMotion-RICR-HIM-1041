@@ -29,7 +29,11 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   const [summary, setSummary] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [notifications, setNotifications] = useState({ items: [], unread: 0 });
   const [cases, setCases] = useState(null);
+  const [department, setDepartment] = useState("");
+  const [showInbox, setShowInbox] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -37,18 +41,22 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [dashboard, queue] = await Promise.all([
+      const [dashboard, departmentList, inbox, queue] = await Promise.all([
         adminService.getDashboard(),
-        adminService.listCases(),
+        adminService.getDepartments(),
+        adminService.getNotifications(),
+        adminService.listCases(department || undefined),
       ]);
       setSummary(dashboard);
+      setDepartments(departmentList);
+      setNotifications(inbox);
       setCases(queue);
     } catch (err) {
       setError(err.message || "We couldn't load the city overview.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [department]);
 
   useEffect(() => {
     load();
@@ -57,6 +65,21 @@ export default function AdminDashboard() {
   async function handleLogout() {
     await logout();
     navigate("/login", { replace: true });
+  }
+
+  async function openNotification(notification) {
+    if (notification.is_read) return;
+    try {
+      await adminService.markNotificationRead(notification.id);
+      setNotifications((current) => ({
+        unread: Math.max(current.unread - 1, 0),
+        items: current.items.map((item) =>
+          item.id === notification.id ? { ...item, is_read: true } : item
+        ),
+      }));
+    } catch {
+      return;
+    }
   }
 
   return (
@@ -72,6 +95,20 @@ export default function AdminDashboard() {
             </span>
           </span>
           <div className="admin-account">
+            <button
+              type="button"
+              className="notif-bell"
+              aria-expanded={showInbox}
+              onClick={() => setShowInbox((open) => !open)}
+            >
+              🔔
+              {notifications.unread > 0 && (
+                <span className="notif-bell__count">{notifications.unread}</span>
+              )}
+              <span className="visually-hidden">
+                {notifications.unread} unread notifications
+              </span>
+            </button>
             <span className="citizen-nav__email" title={user?.email}>
               {user?.email}
             </span>
@@ -87,10 +124,41 @@ export default function AdminDashboard() {
           <div className="page-heading">
             <h1>Admin Dashboard</h1>
             <p className="muted">
-              Every real-world problem appears once, however many citizens reported
-              it — ordered by severity, people affected, and days ignored.
+              Every real-world problem appears once, routed to its department and
+              ordered by severity, people affected, and days ignored.
             </p>
           </div>
+
+          {showInbox && (
+            <section className="card notif-panel" aria-label="Notifications">
+              <h2 className="card__title">Notifications</h2>
+              {notifications.items.length === 0 ? (
+                <p className="muted">Nothing yet — new cases will appear here.</p>
+              ) : (
+                <ul className="notif-list">
+                  {notifications.items.map((notification) => (
+                    <li key={notification.id}>
+                      <button
+                        type="button"
+                        className={`notif-item${
+                          notification.is_read ? "" : " notif-item--unread"
+                        }`}
+                        onClick={() => openNotification(notification)}
+                      >
+                        <span className="notif-item__message">
+                          {notification.message.split("\n")[0]}
+                        </span>
+                        <span className="notif-item__meta">
+                          {formatDate(notification.created_at)}
+                          {notification.is_read ? "" : " · unread"}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
           {loading && <LoadingState label="Loading the city overview…" />}
 
@@ -120,6 +188,28 @@ export default function AdminDashboard() {
                   <span className="stat-card__label">Registered citizens</span>
                 </li>
               </ul>
+
+              <div className="filter-chips" role="group" aria-label="Filter by department">
+                <button
+                  type="button"
+                  className={`chip${department === "" ? " chip--active" : ""}`}
+                  aria-pressed={department === ""}
+                  onClick={() => setDepartment("")}
+                >
+                  All departments
+                </button>
+                {departments.map((item) => (
+                  <button
+                    key={item.code}
+                    type="button"
+                    className={`chip${department === item.code ? " chip--active" : ""}`}
+                    aria-pressed={department === item.code}
+                    onClick={() => setDepartment(item.code)}
+                  >
+                    {item.name} ({item.open_cases})
+                  </button>
+                ))}
+              </div>
 
               <section aria-labelledby="queue-heading">
                 <h2 className="section-title" id="queue-heading">
@@ -166,6 +256,9 @@ export default function AdminDashboard() {
 
                           <span className="issue-card__aside">
                             <StatusBadge status={item.status} size="sm" />
+                            {item.department_name && (
+                              <span className="dept-badge">{item.department_name}</span>
+                            )}
                             <span className="case-meta">
                               👥 {item.citizen_count}{" "}
                               {item.citizen_count === 1 ? "citizen" : "citizens"}

@@ -18,6 +18,7 @@ from app.core.issue_types import (
 from app.core.storage import Storage, get_storage
 from app.models import Issue, User
 from app.schemas.citizen import IssueCreate, IssueResponse
+from app.services.routing import resolve_department
 
 TRACKING_ID_PREFIX = "SMC"
 CASE_ID_PREFIX = "CASE"
@@ -129,6 +130,7 @@ def create_citizen_issue(
         latitude=data.latitude,
         longitude=data.longitude,
     )
+    department = resolve_department(db, data.category)
 
     photo_url = None
     if photo_bytes is not None and photo_extension is not None:
@@ -147,6 +149,7 @@ def create_citizen_issue(
         address=data.address,
         photo_url=photo_url,
         status=IssueStatus.SUBMITTED,
+        department_id=department.id if department else None,
     )
     db.add(issue)
     db.flush()

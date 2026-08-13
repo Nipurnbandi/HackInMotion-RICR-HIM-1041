@@ -83,6 +83,15 @@ def other_citizen(db):
 
 
 @pytest.fixture(autouse=True)
+def seed_routing(setup_db, db, monkeypatch):
+    import app.services.notification as notification_module
+    from app.services.routing import seed_departments
+
+    seed_departments(db)
+    monkeypatch.setattr(notification_module, "SessionLocal", TestingSessionLocal)
+
+
+@pytest.fixture(autouse=True)
 def tmp_upload_dir(tmp_path, monkeypatch):
     import app.core.storage as storage_module
     from app.core.config import settings

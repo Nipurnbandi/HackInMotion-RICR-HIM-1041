@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session, aliased
 
 from app.core.issue_types import CLOSED_STATUSES, SEVERITY_WEIGHTS
 from app.core.roles import Role
-from app.models import Issue, User
+from app.models import Department, Issue, User
 from app.schemas.admin import IssueUpdate
 
 
@@ -35,16 +35,22 @@ def get_admin_analytics(db: Session) -> dict:
     }
 
 
-def list_admin_cases(db: Session) -> list[dict]:
+def list_admin_cases(db: Session, *, department_code: str | None = None) -> list[dict]:
     member = aliased(Issue)
     citizens = func.count(func.distinct(member.citizen_id))
 
-    rows = db.execute(
+    query = (
         select(Issue, citizens)
         .join(member, member.case_id == Issue.case_id)
         .where(Issue.is_primary.is_(True))
         .group_by(Issue.id)
-    ).all()
+    )
+    if department_code:
+        query = query.join(
+            Department, Issue.department_id == Department.id
+        ).where(Department.code == department_code)
+
+    rows = db.execute(query).all()
 
     now = datetime.now(timezone.utc)
     cases = []
@@ -63,11 +69,39 @@ def list_admin_cases(db: Session) -> list[dict]:
                 "citizen_count": citizen_count,
                 "days_open": days_open,
                 "priority_score": priority,
+                "department_code": issue.department.code if issue.department else None,
+                "department_name": issue.department.name if issue.department else None,
             }
         )
 
     cases.sort(key=lambda case: case["priority_score"], reverse=True)
     return cases
+
+
+def list_departments(db: Session) -> list[dict]:
+    open_cases = func.count(Issue.id)
+    rows = db.execute(
+        select(Department, open_cases)
+        .outerjoin(
+            Issue,
+            and_(
+                Issue.department_id == Department.id,
+                Issue.is_primary.is_(True),
+                Issue.status.notin_(CLOSED_STATUSES),
+            ),
+        )
+        .group_by(Department.id)
+        .order_by(Department.name)
+    ).all()
+    return [
+        {
+            "code": department.code,
+            "name": department.name,
+            "email": department.email,
+            "open_cases": count,
+        }
+        for department, count in rows
+    ]
 
 
 def update_issue(db: Session, issue_id: int, data: IssueUpdate) -> Issue:

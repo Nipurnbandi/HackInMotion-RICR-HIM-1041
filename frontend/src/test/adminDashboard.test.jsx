@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
 vi.mock("../admin/services/adminService", () => ({
   adminService: {
     getDashboard: vi.fn(),
+    getDepartments: vi.fn(),
     listCases: vi.fn(),
+    getNotifications: vi.fn(),
+    markNotificationRead: vi.fn(),
   },
 }));
 
@@ -23,6 +27,24 @@ import AdminDashboard from "../admin/pages/AdminDashboard";
 import { adminService } from "../admin/services/adminService";
 
 const SUMMARY = { message: "Welcome", role: "ADMIN", total_issues: 2, total_citizens: 4 };
+
+const DEPARTMENTS = [
+  { code: "ROADS", name: "Roads Department", email: "roads@city.gov", open_cases: 1 },
+  { code: "SANITATION", name: "Sanitation Department", email: "sanitation@city.gov", open_cases: 1 },
+];
+
+const NOTIFICATIONS = {
+  unread: 1,
+  items: [
+    {
+      id: 11,
+      message: "A new problem has been assigned to Roads Department.\nCase: CASE-000001",
+      is_read: false,
+      sent_at: null,
+      created_at: "2026-08-12T09:00:00Z",
+    },
+  ],
+};
 
 const CASES = [
   {
@@ -42,6 +64,8 @@ const CASES = [
     citizen_count: 3,
     days_open: 3,
     priority_score: 17.1,
+    department_code: "ROADS",
+    department_name: "Roads Department",
   },
   {
     id: 5,
@@ -60,6 +84,8 @@ const CASES = [
     citizen_count: 1,
     days_open: 0,
     priority_score: 2.0,
+    department_code: "SANITATION",
+    department_name: "Sanitation Department",
   },
 ];
 
@@ -75,6 +101,8 @@ describe("AdminDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     adminService.getDashboard.mockResolvedValue(SUMMARY);
+    adminService.getDepartments.mockResolvedValue(DEPARTMENTS);
+    adminService.getNotifications.mockResolvedValue(NOTIFICATIONS);
     adminService.listCases.mockResolvedValue(CASES);
   });
 
@@ -123,5 +151,56 @@ describe("AdminDashboard", () => {
     renderPage();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/Server unavailable/i);
+  });
+
+  it("shows department chips and each case's department badge", async () => {
+    renderPage();
+
+    expect(
+      await screen.findByRole("button", { name: "Roads Department (1)" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Sanitation Department (1)" })
+    ).toBeInTheDocument();
+
+    const rows = screen.getAllByRole("listitem").filter((li) =>
+      li.className.includes("issue-card")
+    );
+    expect(within(rows[0]).getByText("Roads Department")).toBeInTheDocument();
+  });
+
+  it("filters the queue by department through the API", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Pothole");
+
+    await user.click(screen.getByRole("button", { name: "Roads Department (1)" }));
+
+    await waitFor(() => {
+      expect(adminService.listCases).toHaveBeenLastCalledWith("ROADS");
+    });
+  });
+
+  it("shows the unread notification count and marks one as read", async () => {
+    adminService.markNotificationRead.mockResolvedValue({});
+    const user = userEvent.setup();
+    renderPage();
+
+    const bell = await screen.findByRole("button", {
+      name: /1 unread notifications/i,
+    });
+    await user.click(bell);
+
+    const item = await screen.findByRole("button", {
+      name: /assigned to Roads Department/i,
+    });
+    expect(item).toHaveTextContent("unread");
+
+    await user.click(item);
+
+    await waitFor(() => {
+      expect(adminService.markNotificationRead).toHaveBeenCalledWith(11);
+    });
+    expect(item).not.toHaveTextContent("unread");
   });
 });

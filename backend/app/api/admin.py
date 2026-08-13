@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -10,15 +12,20 @@ from app.schemas.admin import (
     AdminCaseResponse,
     AdminDashboardResponse,
     AdminIssueResponse,
+    DepartmentResponse,
     IssueUpdate,
+    NotificationListResponse,
+    NotificationResponse,
 )
 from app.services.admin import (
     delete_issue,
     get_admin_analytics,
     get_admin_dashboard,
     list_admin_cases,
+    list_departments,
     update_issue,
 )
+from app.services.notification import list_notifications, mark_notification_read
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -32,6 +39,8 @@ def case_response(case: dict) -> AdminCaseResponse:
             "citizen_count": case["citizen_count"],
             "days_open": case["days_open"],
             "priority_score": case["priority_score"],
+            "department_code": case["department_code"],
+            "department_name": case["department_name"],
         }
     )
 
@@ -52,12 +61,45 @@ def admin_analytics(
     return get_admin_analytics(db)
 
 
-@router.get("/issues", response_model=list[AdminCaseResponse])
-def admin_list_issues(
+@router.get("/departments", response_model=list[DepartmentResponse])
+def admin_list_departments(
     _: User = Depends(admin_only),
     db: Session = Depends(get_db),
 ):
-    return [case_response(case) for case in list_admin_cases(db)]
+    return list_departments(db)
+
+
+@router.get("/issues", response_model=list[AdminCaseResponse])
+def admin_list_issues(
+    department: Annotated[str | None, Query(max_length=50)] = None,
+    _: User = Depends(admin_only),
+    db: Session = Depends(get_db),
+):
+    return [
+        case_response(case)
+        for case in list_admin_cases(db, department_code=department)
+    ]
+
+
+@router.get("/notifications", response_model=NotificationListResponse)
+def admin_notifications(
+    _: User = Depends(admin_only),
+    db: Session = Depends(get_db),
+):
+    items, unread = list_notifications(db)
+    return NotificationListResponse(
+        items=[NotificationResponse.model_validate(item) for item in items],
+        unread=unread,
+    )
+
+
+@router.post("/notifications/{notification_id}/read", response_model=NotificationResponse)
+def admin_mark_notification_read(
+    notification_id: int,
+    _: User = Depends(admin_only),
+    db: Session = Depends(get_db),
+):
+    return mark_notification_read(db, notification_id)
 
 
 @router.put("/issues/{issue_id}", response_model=AdminIssueResponse)

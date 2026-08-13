@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     upload_url_prefix: str = "/uploads"
     max_upload_size_bytes: int = 5 * 1024 * 1024
 
+    notifier: str = "console"
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "SmartCity Reports <noreply@city.gov>"
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     @field_validator("cors_origins", mode="before")
