@@ -1,11 +1,3 @@
-"""Pluggable file storage.
-
-The Issue model only ever stores the string returned by ``Storage.save`` in its
-``photo_url`` column, so swapping ``LocalDiskStorage`` for an S3-compatible
-backend later requires no model or schema change — only a new ``Storage``
-implementation and a different ``get_storage()`` return value.
-"""
-
 from __future__ import annotations
 
 import secrets
@@ -17,20 +9,12 @@ from app.core.config import settings
 
 
 class Storage(Protocol):
-    def save(self, *, content: bytes, extension: str, prefix: str) -> str:
-        """Persist ``content`` and return a public reference (URL or path)."""
+    def save(self, *, content: bytes, extension: str, prefix: str) -> str: ...
 
-    def delete(self, reference: str) -> None:
-        """Best-effort removal of a previously saved reference."""
+    def delete(self, reference: str) -> None: ...
 
 
 class LocalDiskStorage:
-    """Development-friendly storage that writes under ``settings.upload_dir``.
-
-    Files are served back by the ``StaticFiles`` mount registered in
-    ``app.main`` at ``settings.upload_url_prefix``.
-    """
-
     def __init__(self, root: Path, url_prefix: str) -> None:
         self.root = root
         self.url_prefix = url_prefix.rstrip("/")
@@ -48,7 +32,6 @@ class LocalDiskStorage:
             return
         relative = reference[len(self.url_prefix) + 1 :]
         target = (self.root / relative).resolve()
-        # Never follow a reference that escapes the upload root.
         if self.root.resolve() in target.parents and target.is_file():
             target.unlink(missing_ok=True)
 

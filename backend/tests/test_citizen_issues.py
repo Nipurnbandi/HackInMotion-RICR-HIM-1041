@@ -11,7 +11,6 @@ VALID_DESCRIPTION = "Large pothole near the main road, dangerous for two-wheeler
 
 
 def png_bytes() -> bytes:
-    """A minimal but structurally valid 1x1 PNG."""
     header = b"\x89PNG\r\n\x1a\n"
     ihdr = struct.pack(">I", 13) + b"IHDR" + struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0)
     return header + ihdr + b"\x00" * 32
@@ -48,7 +47,7 @@ def make_issue(db, user, **overrides) -> Issue:
     db.add(issue)
     db.commit()
     db.refresh(issue)
-    # Mirror what the service does after flush: identifiers derived from the id.
+
     if issue.tracking_id is None:
         issue.tracking_id = f"SMC-2026-{issue.id:06d}"
     if issue.case_id is None:
@@ -56,9 +55,6 @@ def make_issue(db, user, **overrides) -> Issue:
     db.commit()
     db.refresh(issue)
     return issue
-
-
-# --- creation -----------------------------------------------------------
 
 
 def test_authenticated_citizen_can_create_issue(client, citizen_user):
@@ -131,9 +127,6 @@ def test_admin_cannot_use_citizen_issue_endpoints(client, admin_user):
     )
 
 
-# --- validation ---------------------------------------------------------
-
-
 def test_invalid_category_rejected(client, citizen_user):
     response = client.post(
         "/api/citizen/issues",
@@ -193,9 +186,6 @@ def test_overlong_description_rejected(client, citizen_user):
         headers=auth_header(citizen_user),
     )
     assert response.status_code == 422
-
-
-# --- ownership / privilege escalation ------------------------------------
 
 
 def test_citizen_cannot_set_status_on_create(client, citizen_user, db):
@@ -278,9 +268,6 @@ def test_issue_response_hides_internal_fields(client, citizen_user, db):
     assert "hashed_password" not in body
 
 
-# --- photo evidence -----------------------------------------------------
-
-
 def test_valid_photo_is_stored_and_referenced(client, citizen_user, tmp_upload_dir):
     response = client.post(
         "/api/citizen/issues",
@@ -313,7 +300,6 @@ def test_jpeg_photo_accepted(client, citizen_user, tmp_upload_dir):
 def test_non_image_content_rejected_despite_image_extension(
     client, citizen_user, tmp_upload_dir
 ):
-    """An executable renamed to .png with a spoofed content type must fail."""
     response = client.post(
         "/api/citizen/issues",
         data=issue_form(),
@@ -355,9 +341,6 @@ def test_rejected_photo_does_not_create_issue(client, citizen_user, db, tmp_uplo
         headers=auth_header(citizen_user),
     )
     assert db.query(Issue).count() == 0
-
-
-# --- listing, filtering, dashboard --------------------------------------
 
 
 def test_list_filters_by_status(client, citizen_user, db):

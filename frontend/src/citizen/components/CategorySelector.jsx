@@ -1,9 +1,5 @@
 import { CATEGORIES } from "../constants";
 
-/**
- * Single-choice category picker rendered as a real radio group so keyboard
- * and screen-reader users get native selection semantics.
- */
 export default function CategorySelector({ value, onChange, error, describedBy }) {
   const errorId = error ? "category-error" : undefined;
 

@@ -22,7 +22,6 @@ const TILE_ATTRIBUTION =
   import.meta.env.VITE_MAP_TILE_ATTRIBUTION ??
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-/** Read-only map showing where a report was filed. */
 export default function IssueLocationMap({ latitude, longitude, label }) {
   if (latitude == null || longitude == null) {
     return <p className="muted">No location was recorded for this report.</p>;

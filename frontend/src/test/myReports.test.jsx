@@ -100,7 +100,6 @@ describe("MyReports", () => {
     expect(screen.getByText("SMC-2026-000007")).toBeInTheDocument();
     expect(screen.getByText("Example Street, Bhopal")).toBeInTheDocument();
 
-    // "In Progress" is also a filter chip, so scope the badge check to the card.
     const card = screen.getByRole("link", { name: /Pothole/i });
     expect(within(card).getByText("In Progress")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Pothole/i })).toHaveAttribute(

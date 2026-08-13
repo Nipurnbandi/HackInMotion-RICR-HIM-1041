@@ -19,7 +19,6 @@ class IssueStatus(str, enum.Enum):
     REJECTED = "REJECTED"
 
 
-#: Human-readable labels, used to derive an issue title for admin-facing listings.
 CATEGORY_LABELS: dict[IssueCategory, str] = {
     IssueCategory.STREETLIGHT: "Streetlight",
     IssueCategory.POTHOLE: "Pothole",
@@ -30,17 +29,6 @@ CATEGORY_LABELS: dict[IssueCategory, str] = {
     IssueCategory.BROKEN_DRAINAGE: "Broken Drainage",
 }
 
-#: Statuses a citizen report moves through, in order. The terminal REJECTED state
-#: sits outside this progression and is rendered separately.
-STATUS_FLOW: tuple[IssueStatus, ...] = (
-    IssueStatus.SUBMITTED,
-    IssueStatus.UNDER_REVIEW,
-    IssueStatus.IN_PROGRESS,
-    IssueStatus.RESOLVED,
-)
-
-#: Duplicate detection — how far apart two reports can be and still describe
-#: the same real-world problem. A pothole is a point; water flows down a street.
 CATEGORY_RADIUS_METERS: dict[IssueCategory, float] = {
     IssueCategory.POTHOLE: 25,
     IssueCategory.STREETLIGHT: 30,
@@ -51,9 +39,6 @@ CATEGORY_RADIUS_METERS: dict[IssueCategory, float] = {
     IssueCategory.BROKEN_DRAINAGE: 80,
 }
 
-#: Duplicate detection — how many days an open report keeps absorbing new ones.
-#: A pothole sits for months; an overflowing bin is emptied within days, so an
-#: old garbage report describes a *different* event than today's.
 CATEGORY_WINDOW_DAYS: dict[IssueCategory, int] = {
     IssueCategory.GARBAGE_OVERFLOW: 3,
     IssueCategory.ILLEGAL_DUMPING: 7,
@@ -64,8 +49,6 @@ CATEGORY_WINDOW_DAYS: dict[IssueCategory, int] = {
     IssueCategory.DAMAGED_PUBLIC_PROPERTY: 60,
 }
 
-#: Prioritization — how dangerous a category is, independent of demand.
-#: Feeds the case priority score: severity x citizens x age.
 SEVERITY_WEIGHTS: dict[IssueCategory, int] = {
     IssueCategory.WATER_LEAKAGE: 5,
     IssueCategory.BROKEN_DRAINAGE: 5,
@@ -75,3 +58,12 @@ SEVERITY_WEIGHTS: dict[IssueCategory, int] = {
     IssueCategory.GARBAGE_OVERFLOW: 2,
     IssueCategory.ILLEGAL_DUMPING: 2,
 }
+
+CLOSED_STATUSES: tuple[IssueStatus, ...] = (IssueStatus.RESOLVED, IssueStatus.REJECTED)
+
+STATUS_FLOW: tuple[IssueStatus, ...] = (
+    IssueStatus.SUBMITTED,
+    IssueStatus.UNDER_REVIEW,
+    IssueStatus.IN_PROGRESS,
+    IssueStatus.RESOLVED,
+)

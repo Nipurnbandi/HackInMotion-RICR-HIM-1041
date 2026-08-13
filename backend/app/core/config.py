@@ -14,8 +14,6 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
-    # Photo evidence storage (local disk in development; swap the Storage
-    # implementation in app.core.storage for object storage later).
     upload_dir: str = "uploads"
     upload_url_prefix: str = "/uploads"
     max_upload_size_bytes: int = 5 * 1024 * 1024

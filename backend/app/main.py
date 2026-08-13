@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import admin, auth, citizen, health, users
+from app.api import admin, auth, citizen, users
 from app.core.config import settings
 
 app = FastAPI(title=settings.app_name, debug=settings.debug)
@@ -17,17 +17,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Photo evidence is written by app.core.storage.LocalDiskStorage and served
-# back from here. Replacing that storage backend makes this mount redundant.
-_upload_root = Path(settings.upload_dir)
-_upload_root.mkdir(parents=True, exist_ok=True)
+upload_root = Path(settings.upload_dir)
+upload_root.mkdir(parents=True, exist_ok=True)
 app.mount(
     settings.upload_url_prefix,
-    StaticFiles(directory=_upload_root),
+    StaticFiles(directory=upload_root),
     name="uploads",
 )
 
-app.include_router(health.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(citizen.router, prefix="/api")

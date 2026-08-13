@@ -88,7 +88,6 @@ describe("AdminDashboard", () => {
       li.className.includes("issue-card")
     );
     expect(rows).toHaveLength(2);
-    // API order is preserved: highest priority first.
     expect(within(rows[0]).getByText("Pothole")).toBeInTheDocument();
     expect(within(rows[1]).getByText("Overflowing Garbage")).toBeInTheDocument();
   });
@@ -108,7 +107,6 @@ describe("AdminDashboard", () => {
 
     const casesCard = (await screen.findByText("Open problems (cases)")).closest("li");
     expect(casesCard).toHaveTextContent("2");
-    // Reports received = sum of citizen counts across cases (3 + 1).
     const reportsCard = screen.getByText("Reports received").closest("li");
     expect(reportsCard).toHaveTextContent("4");
   });

@@ -84,7 +84,6 @@ def other_citizen(db):
 
 @pytest.fixture(autouse=True)
 def tmp_upload_dir(tmp_path, monkeypatch):
-    """Point photo storage at a temp directory for the duration of a test."""
     import app.core.storage as storage_module
     from app.core.config import settings
 

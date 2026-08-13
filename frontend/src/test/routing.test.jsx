@@ -125,7 +125,6 @@ describe("Frontend routing", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-    // "Good to know" is unique to the citizen dashboard page.
     expect(await screen.findByRole("heading", { name: "Good to know" })).toBeInTheDocument();
   });
 
@@ -155,7 +154,6 @@ describe("Frontend routing", () => {
     });
 
     render(<TestApp initialPath="/admin" />);
-    // "Good to know" is unique to the citizen dashboard page.
     expect(await screen.findByRole("heading", { name: "Good to know" })).toBeInTheDocument();
   });
 

@@ -31,8 +31,7 @@ from app.services.issue import (
 
 router = APIRouter(prefix="/citizen", tags=["citizen"])
 
-# Every route below is gated on an authenticated user holding the CITIZEN role.
-_citizen_only = require_roles(Role.CITIZEN)
+citizen_only = require_roles(Role.CITIZEN)
 
 
 def parse_issue_form(
@@ -42,13 +41,6 @@ def parse_issue_form(
     longitude: Annotated[float, Form()],
     address: Annotated[str | None, Form()] = None,
 ) -> IssueCreate:
-    """Validate multipart form fields through the IssueCreate schema.
-
-    The fields are declared individually because FastAPI embeds a form model
-    under its own key as soon as the endpoint also accepts a file. Validation
-    errors are re-raised as FastAPI's own 422 so responses stay consistent
-    with the JSON endpoints.
-    """
     try:
         return IssueCreate(
             category=category,
@@ -72,7 +64,7 @@ def parse_issue_form(
 
 @router.get("/dashboard", response_model=CitizenDashboardResponse)
 def citizen_dashboard(
-    current_user: User = Depends(_citizen_only),
+    current_user: User = Depends(citizen_only),
     db: Session = Depends(get_db),
 ):
     return get_citizen_dashboard(db, current_user)
@@ -80,7 +72,7 @@ def citizen_dashboard(
 
 @router.get("/issues/stats", response_model=IssueStats)
 def citizen_issue_stats(
-    current_user: User = Depends(_citizen_only),
+    current_user: User = Depends(citizen_only),
     db: Session = Depends(get_db),
 ):
     return get_citizen_stats(db, current_user)
@@ -92,20 +84,13 @@ def citizen_issue_stats(
 async def create_issue(
     data: Annotated[IssueCreate, Depends(parse_issue_form)],
     photo: Annotated[UploadFile | None, File()] = None,
-    current_user: User = Depends(_citizen_only),
+    current_user: User = Depends(citizen_only),
     db: Session = Depends(get_db),
 ):
-    """Create a report owned by the authenticated citizen.
-
-    ``citizen_id`` and ``status`` are never read from the request body — the
-    former comes from the JWT, the latter is always SUBMITTED.
-    """
     photo_bytes: bytes | None = None
     photo_extension: str | None = None
 
     if photo is not None and photo.filename:
-        # Read at most one byte past the limit so an oversized upload is
-        # rejected without buffering the whole payload.
         photo_bytes = await photo.read(settings.max_upload_size_bytes + 1)
         photo_extension = validate_photo(
             content=photo_bytes,
@@ -128,7 +113,7 @@ def get_my_issues(
     search: Annotated[str | None, Query(max_length=200)] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
-    current_user: User = Depends(_citizen_only),
+    current_user: User = Depends(citizen_only),
     db: Session = Depends(get_db),
 ):
     rows, total = list_citizen_issues(
@@ -150,7 +135,7 @@ def get_my_issues(
 @router.get("/issues/{issue_id}", response_model=IssueResponse)
 def get_my_issue(
     issue_id: int,
-    current_user: User = Depends(_citizen_only),
+    current_user: User = Depends(citizen_only),
     db: Session = Depends(get_db),
 ):
     issue = get_citizen_issue(db, current_user, issue_id)

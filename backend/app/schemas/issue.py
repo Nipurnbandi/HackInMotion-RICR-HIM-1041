@@ -9,12 +9,6 @@ DESCRIPTION_MAX_LENGTH = 2000
 
 
 class IssueCreate(BaseModel):
-    """Citizen-supplied fields for a new report.
-
-    Deliberately has no ``citizen_id`` or ``status`` field — ownership comes
-    from the JWT and new reports always start at SUBMITTED.
-    """
-
     category: IssueCategory
     description: str = Field(min_length=1, max_length=DESCRIPTION_MAX_LENGTH)
     latitude: float = Field(ge=-90, le=90)
@@ -79,38 +73,3 @@ class CitizenDashboardResponse(BaseModel):
     issue_count: int
     stats: IssueStats
     recent_issues: list[IssueResponse]
-
-
-class AdminDashboardResponse(BaseModel):
-    message: str
-    role: str
-    total_issues: int
-    total_citizens: int
-
-
-class AdminAnalyticsResponse(BaseModel):
-    total_issues: int
-    open_issues: int
-    closed_issues: int
-    total_citizens: int
-
-
-class AdminIssueResponse(IssueResponse):
-    """Admin listings additionally expose who filed the report."""
-
-    title: str
-    citizen_id: int
-
-
-class AdminCaseResponse(AdminIssueResponse):
-    """One row per case in the city's priority-ordered work queue."""
-
-    citizen_count: int
-    days_open: int
-    priority_score: float
-
-
-class IssueUpdate(BaseModel):
-    title: str | None = Field(default=None, min_length=1, max_length=255)
-    description: str | None = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
-    status: IssueStatus | None = None

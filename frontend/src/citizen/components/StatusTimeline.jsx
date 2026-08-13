@@ -1,9 +1,5 @@
 import { STATUS_BY_VALUE, STATUS_FLOW } from "../constants";
 
-/**
- * Progress track for a report. Built against the full workflow so future
- * admin-driven transitions light up without changing this component.
- */
 export default function StatusTimeline({ status }) {
   if (status === "REJECTED") {
     const meta = STATUS_BY_VALUE.REJECTED;

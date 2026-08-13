@@ -1,8 +1,3 @@
-"""Citizen issue reporting business logic.
-
-Routers stay thin: they authenticate, authorize, and delegate here.
-"""
-
 from __future__ import annotations
 
 import math
@@ -16,7 +11,7 @@ from app.core.issue_types import (
     CATEGORY_LABELS,
     CATEGORY_RADIUS_METERS,
     CATEGORY_WINDOW_DAYS,
-    SEVERITY_WEIGHTS,
+    CLOSED_STATUSES,
     IssueCategory,
     IssueStatus,
 )
@@ -26,19 +21,9 @@ from app.schemas.issue import IssueCreate, IssueResponse
 
 TRACKING_ID_PREFIX = "SMC"
 CASE_ID_PREFIX = "CASE"
-
 MAX_PAGE_SIZE = 100
+METERS_PER_DEGREE = 111_320.0
 
-# --- case grouping tuning -------------------------------------------------
-
-#: A closed case is never joined: a problem that reappears after being fixed
-#: is a new problem, and must surface as one.
-CLOSED_STATUSES = (IssueStatus.RESOLVED, IssueStatus.REJECTED)
-
-#: One degree of latitude, in metres (constant everywhere on Earth).
-_METERS_PER_DEGREE = 111_320.0
-
-#: Accepted image types mapped to (magic-byte checker, canonical extension).
 ALLOWED_IMAGE_TYPES: dict[str, str] = {
     "image/jpeg": ".jpg",
     "image/jpg": ".jpg",
@@ -47,11 +32,16 @@ ALLOWED_IMAGE_TYPES: dict[str, str] = {
 }
 
 
-def _sniff_image_type(content: bytes) -> str | None:
-    """Return a MIME type inferred from magic bytes, or None if unrecognised.
+def build_tracking_id(issue_id: int, created_at: datetime | None = None) -> str:
+    year = (created_at or datetime.now(timezone.utc)).year
+    return f"{TRACKING_ID_PREFIX}-{year}-{issue_id:06d}"
 
-    The client-supplied filename and Content-Type are never trusted on their own.
-    """
+
+def build_case_id(issue_id: int) -> str:
+    return f"{CASE_ID_PREFIX}-{issue_id:06d}"
+
+
+def sniff_image_type(content: bytes) -> str | None:
     if content.startswith(b"\xff\xd8\xff"):
         return "image/jpeg"
     if content.startswith(b"\x89PNG\r\n\x1a\n"):
@@ -61,65 +51,9 @@ def _sniff_image_type(content: bytes) -> str | None:
     return None
 
 
-def build_tracking_id(issue_id: int, created_at: datetime | None = None) -> str:
-    year = (created_at or datetime.now(timezone.utc)).year
-    return f"{TRACKING_ID_PREFIX}-{year}-{issue_id:06d}"
-
-
-def build_case_id(issue_id: int) -> str:
-    """Case label derived from the primary report's id, e.g. CASE-000012."""
-    return f"{CASE_ID_PREFIX}-{issue_id:06d}"
-
-
-def _search_box(latitude: float, radius_meters: float) -> tuple[float, float]:
-    """Convert a radius in metres into (lat_delta, lon_delta) degrees.
-
-    Longitude degrees shrink with distance from the equator, hence the cosine.
-    """
-    lat_delta = radius_meters / _METERS_PER_DEGREE
-    meters_per_lon_degree = _METERS_PER_DEGREE * math.cos(math.radians(latitude))
-    lon_delta = radius_meters / max(meters_per_lon_degree, 1.0)
-    return lat_delta, lon_delta
-
-
-def find_open_case_id(
-    db: Session, *, category: IssueCategory, latitude: float, longitude: float
-) -> str | None:
-    """The duplicate check: four conditions, all required.
-
-    Same category, inside the category's own search box, reported within the
-    category's own time window, and the case is still open. Radius and window
-    come from the physics of each problem — a water leak spreads 80 m down a
-    street, a pothole is a 25 m point; a pothole sits for 60 days, a garbage
-    bin report is stale after 3. Returns the matched case label (never a
-    report id, so joiners always attach directly to the case — chains are
-    impossible), or None when this is a new problem.
-    """
-    radius = CATEGORY_RADIUS_METERS[category]
-    window_days = CATEGORY_WINDOW_DAYS[category]
-
-    lat_delta, lon_delta = _search_box(latitude, radius)
-    cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
-
-    return db.scalar(
-        select(Issue.case_id)
-        .where(
-            Issue.category == category,
-            Issue.latitude.between(latitude - lat_delta, latitude + lat_delta),
-            Issue.longitude.between(longitude - lon_delta, longitude + lon_delta),
-            Issue.created_at > cutoff,
-            Issue.status.notin_(CLOSED_STATUSES),
-            Issue.case_id.isnot(None),
-        )
-        .order_by(Issue.created_at.asc(), Issue.id.asc())
-        .limit(1)
-    )
-
-
 def validate_photo(
     *, content: bytes, max_bytes: int, declared_content_type: str | None
 ) -> str:
-    """Validate an uploaded photo and return its canonical extension."""
     if not content:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -139,14 +73,45 @@ def validate_photo(
             detail="Unsupported image type. Please upload a JPEG, PNG, or WEBP file.",
         )
 
-    sniffed = _sniff_image_type(content)
-    if sniffed is None:
+    detected_type = sniff_image_type(content)
+    if detected_type is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="That file is not a valid JPEG, PNG, or WEBP image.",
         )
 
-    return ALLOWED_IMAGE_TYPES[sniffed]
+    return ALLOWED_IMAGE_TYPES[detected_type]
+
+
+def search_box(latitude: float, radius_meters: float) -> tuple[float, float]:
+    lat_delta = radius_meters / METERS_PER_DEGREE
+    meters_per_lon_degree = METERS_PER_DEGREE * math.cos(math.radians(latitude))
+    lon_delta = radius_meters / max(meters_per_lon_degree, 1.0)
+    return lat_delta, lon_delta
+
+
+def find_open_case_id(
+    db: Session, *, category: IssueCategory, latitude: float, longitude: float
+) -> str | None:
+    radius = CATEGORY_RADIUS_METERS[category]
+    window_days = CATEGORY_WINDOW_DAYS[category]
+
+    lat_delta, lon_delta = search_box(latitude, radius)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
+
+    return db.scalar(
+        select(Issue.case_id)
+        .where(
+            Issue.category == category,
+            Issue.latitude.between(latitude - lat_delta, latitude + lat_delta),
+            Issue.longitude.between(longitude - lon_delta, longitude + lon_delta),
+            Issue.created_at > cutoff,
+            Issue.status.notin_(CLOSED_STATUSES),
+            Issue.case_id.isnot(None),
+        )
+        .order_by(Issue.created_at.asc(), Issue.id.asc())
+        .limit(1)
+    )
 
 
 def create_citizen_issue(
@@ -158,14 +123,6 @@ def create_citizen_issue(
     photo_extension: str | None = None,
     storage: Storage | None = None,
 ) -> Issue:
-    """Persist a new report owned by ``user``.
-
-    Ownership and status are set server-side; nothing in ``data`` can influence
-    either. The duplicate check runs here silently: the report is always saved
-    and always gets its own tracking ID — the only difference is which case
-    label it carries. The citizen is never told.
-    """
-    # Before the insert, so the query cannot match the report itself.
     matched_case_id = find_open_case_id(
         db,
         category=data.category,
@@ -192,17 +149,13 @@ def create_citizen_issue(
         status=IssueStatus.SUBMITTED,
     )
     db.add(issue)
-    # Flush to obtain the primary key the tracking ID is derived from, so the
-    # identifier is unique without a second sequence or a retry loop.
     db.flush()
-    issue.tracking_id = build_tracking_id(issue.id)
 
+    issue.tracking_id = build_tracking_id(issue.id)
     if matched_case_id is not None:
-        # Same problem already on file: join its case.
         issue.case_id = matched_case_id
         issue.is_primary = False
     else:
-        # A new problem: this report opens the case and represents it in lists.
         issue.case_id = build_case_id(issue.id)
         issue.is_primary = True
 
@@ -211,25 +164,18 @@ def create_citizen_issue(
     return issue
 
 
-def _effective_status_columns():
-    """Aliased self-join giving each report its display status.
-
-    Status belongs to the case: a joined report shows its primary's status,
-    a primary shows its own. LEFT JOIN + coalesce, so a report whose primary
-    was deleted still displays rather than disappearing.
-    """
+def case_status_join():
     primary = aliased(Issue)
-    on_primary = and_(primary.case_id == Issue.case_id, primary.is_primary.is_(True))
+    join_condition = and_(
+        primary.case_id == Issue.case_id, primary.is_primary.is_(True)
+    )
     effective_status = func.coalesce(primary.status, Issue.status)
-    return primary, on_primary, effective_status
+    return primary, join_condition, effective_status
 
 
-def issue_response(issue: Issue, status_override: IssueStatus | None = None) -> IssueResponse:
-    """Serialize a report, substituting the case's status when supplied.
-
-    The override is applied at the response layer on purpose: the ORM row is
-    never mutated, so a stray flush can't write a citizen-visible status back.
-    """
+def issue_response(
+    issue: Issue, status_override: IssueStatus | None = None
+) -> IssueResponse:
     response = IssueResponse.model_validate(issue)
     if status_override is not None:
         response.status = status_override
@@ -237,7 +183,6 @@ def issue_response(issue: Issue, status_override: IssueStatus | None = None) -> 
 
 
 def issue_effective_status(db: Session, issue: Issue) -> IssueStatus:
-    """Display status for a single report: its case's status."""
     if issue.is_primary or not issue.case_id:
         return issue.status
     primary_status = db.scalar(
@@ -257,16 +202,10 @@ def list_citizen_issues(
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[tuple[Issue, IssueStatus]], int]:
-    """Return ``([(issue, effective_status)], total)`` for the citizen.
-
-    Deliberately unfiltered by ``is_primary`` — a citizen always sees their own
-    reports. The status filter matches the effective (case) status, so a report
-    whose case moved on is found under its real state.
-    """
     page = max(page, 1)
     page_size = min(max(page_size, 1), MAX_PAGE_SIZE)
 
-    primary, on_primary, effective_status = _effective_status_columns()
+    primary, join_condition, effective_status = case_status_join()
 
     filters = [Issue.citizen_id == user.id]
     if status_filter is not None:
@@ -283,14 +222,14 @@ def list_citizen_issues(
         db.scalar(
             select(func.count())
             .select_from(Issue)
-            .outerjoin(primary, on_primary)
+            .outerjoin(primary, join_condition)
             .where(*filters)
         )
         or 0
     )
     rows = db.execute(
         select(Issue, effective_status)
-        .outerjoin(primary, on_primary)
+        .outerjoin(primary, join_condition)
         .where(*filters)
         .order_by(Issue.created_at.desc(), Issue.id.desc())
         .offset((page - 1) * page_size)
@@ -300,11 +239,6 @@ def list_citizen_issues(
 
 
 def get_citizen_issue(db: Session, user: User, issue_id: int) -> Issue:
-    """Fetch one issue, refusing anything the citizen does not own.
-
-    Returns 404 rather than 403 for someone else's issue so IDs cannot be
-    probed for existence.
-    """
     issue = db.get(Issue, issue_id)
     if issue is None or issue.citizen_id != user.id:
         raise HTTPException(
@@ -315,12 +249,11 @@ def get_citizen_issue(db: Session, user: User, issue_id: int) -> Issue:
 
 
 def get_citizen_stats(db: Session, user: User) -> dict[str, int]:
-    """Personal counts, bucketed by effective (case) status."""
-    primary, on_primary, effective_status = _effective_status_columns()
+    primary, join_condition, effective_status = case_status_join()
     rows = db.execute(
         select(effective_status, func.count())
         .select_from(Issue)
-        .outerjoin(primary, on_primary)
+        .outerjoin(primary, join_condition)
         .where(Issue.citizen_id == user.id)
         .group_by(effective_status)
     ).all()
@@ -334,54 +267,6 @@ def get_citizen_stats(db: Session, user: User) -> dict[str, int]:
         "resolved": counts.get(IssueStatus.RESOLVED, 0),
         "rejected": counts.get(IssueStatus.REJECTED, 0),
     }
-
-
-def list_admin_cases(db: Session) -> list[dict]:
-    """The city's work queue: one row per case, ordered by priority.
-
-    priority = severity x citizens x (1 + days_open / 7)
-
-    - severity: how dangerous the category is (water leak outranks garbage)
-    - citizens: COUNT(DISTINCT citizen_id) across the case — one person
-      submitting five reports still counts as one voice, so spamming is useless
-    - age: an ignored problem climbs the list by itself, so a lonely street's
-      single report cannot starve behind busy-road potholes forever
-
-    Everything derives from columns that already exist; nothing is stored, so
-    the score is always correct after merges, splits, or deletions.
-    """
-    member = aliased(Issue)
-    citizens = func.count(func.distinct(member.citizen_id))
-
-    rows = db.execute(
-        select(Issue, citizens)
-        .join(member, member.case_id == Issue.case_id)
-        .where(Issue.is_primary.is_(True))
-        .group_by(Issue.id)
-    ).all()
-
-    now = datetime.now(timezone.utc)
-    cases = []
-    for issue, citizen_count in rows:
-        created = issue.created_at
-        if created.tzinfo is None:  # SQLite stores naive UTC
-            created = created.replace(tzinfo=timezone.utc)
-        days_open = max((now - created).days, 0)
-
-        priority = round(
-            SEVERITY_WEIGHTS[issue.category] * citizen_count * (1 + days_open / 7), 1
-        )
-        cases.append(
-            {
-                "issue": issue,
-                "citizen_count": citizen_count,
-                "days_open": days_open,
-                "priority_score": priority,
-            }
-        )
-
-    cases.sort(key=lambda case: case["priority_score"], reverse=True)
-    return cases
 
 
 def get_citizen_dashboard(db: Session, user: User, *, recent_limit: int = 5) -> dict:

@@ -7,12 +7,6 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/**
- * Photo evidence picker with preview, replace and remove.
- *
- * Client-side checks are for fast feedback only — the backend re-validates
- * the MIME type, size and actual image content.
- */
 export default function ImageUploader({ value, onChange, progress, error }) {
   const inputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -71,7 +65,6 @@ export default function ImageUploader({ value, onChange, progress, error }) {
         id="photo-input"
         ref={inputRef}
         type="file"
-        // `capture` lets mobile browsers offer the camera directly.
         accept={ACCEPTED_PHOTO_TYPES.join(",")}
         capture="environment"
         onChange={(event) => handleFile(event.target.files?.[0])}

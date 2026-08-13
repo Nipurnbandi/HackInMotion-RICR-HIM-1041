@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
-// Shared vocabulary and states live in the citizen module for now; move to a
-// shared module if the admin portal grows.
 import StatusBadge from "../../citizen/components/StatusBadge";
 import { EmptyState, ErrorState, LoadingState } from "../../citizen/components/States";
 import { categoryIcon, categoryLabel } from "../../citizen/constants";
@@ -20,7 +18,6 @@ function formatDate(value) {
   });
 }
 
-/** Priority tiers only affect the badge colour; the order comes from the API. */
 function priorityTone(score) {
   if (score >= 20) return "high";
   if (score >= 10) return "medium";

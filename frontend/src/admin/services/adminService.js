@@ -1,7 +1,3 @@
-/**
- * Admin API client. Same cookie-based session as the rest of the app.
- */
-
 const API_BASE = "/api";
 
 async function request(path) {
@@ -33,6 +29,5 @@ async function request(path) {
 export const adminService = {
   getDashboard: () => request("/admin/dashboard"),
 
-  /** One row per case, highest priority first (ordered by the backend). */
   listCases: () => request("/admin/issues"),
 };

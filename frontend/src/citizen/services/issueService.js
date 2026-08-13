@@ -1,17 +1,8 @@
-/**
- * Citizen issue API client.
- *
- * Uses the same cookie-based session as services/api.js. Creation goes through
- * XMLHttpRequest rather than fetch so the uploader can report real progress.
- */
-
 const API_BASE = "/api";
 
 function normaliseError(status, payload, fallback) {
   const detail = payload?.detail;
 
-  // FastAPI validation errors arrive as a list of {loc, msg} entries; surface
-  // them as a field -> message map so forms can render them inline.
   if (Array.isArray(detail)) {
     const fieldErrors = {};
     for (const item of detail) {
@@ -74,10 +65,6 @@ export const issueService = {
 
   getIssue: (id) => request(`/citizen/issues/${id}`),
 
-  /**
-   * Submit a report. `onProgress` receives 0-100 while the photo uploads.
-   * Resolves with the created issue, including its tracking ID.
-   */
   createIssue(values, { onProgress } = {}) {
     const form = new FormData();
     form.append("category", values.category);

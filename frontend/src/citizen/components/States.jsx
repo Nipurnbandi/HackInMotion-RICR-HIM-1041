@@ -1,5 +1,3 @@
-/** Shared loading / empty / error presentation for citizen pages. */
-
 export function LoadingState({ label = "Loading…" }) {
   return (
     <div className="state state--loading" role="status" aria-live="polite">

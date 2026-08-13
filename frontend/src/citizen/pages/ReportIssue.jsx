@@ -61,8 +61,6 @@ export default function ReportIssue() {
   );
 
   const focusHeading = useCallback(() => {
-    // Move focus to the new step heading so keyboard and screen-reader users
-    // are not left at the bottom of the previous step.
     requestAnimationFrame(() => headingRef.current?.focus());
   }, []);
 
@@ -327,13 +325,6 @@ export default function ReportIssue() {
             </Link>
           )}
 
-          {/*
-            Both buttons are type="button" and keyed apart on purpose. With a
-            shared type="submit"/"button" node, advancing from step 4 would
-            flip the live node's type mid-click, and the browser — which
-            resolves a click's default action after dispatch — would submit the
-            form immediately, skipping the review step.
-          */}
           {step.id === "review" ? (
             <button
               key="submit"

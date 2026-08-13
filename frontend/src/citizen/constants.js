@@ -1,9 +1,3 @@
-/**
- * Presentation metadata for the issue vocabulary owned by the backend
- * (app/core/issue_types.py). The `value` fields must stay in sync with the
- * IssueCategory / IssueStatus enums — the backend rejects anything else.
- */
-
 export const CATEGORIES = [
   {
     value: "STREETLIGHT",
@@ -98,7 +92,6 @@ export const STATUS_BY_VALUE = Object.fromEntries(
   STATUSES.map((status) => [status.value, status])
 );
 
-/** Ordered progression shown by the status timeline. REJECTED sits outside it. */
 export const STATUS_FLOW = ["SUBMITTED", "UNDER_REVIEW", "IN_PROGRESS", "RESOLVED"];
 
 export function statusLabel(value) {

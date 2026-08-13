@@ -9,7 +9,6 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 import { formatCoordinates, reverseGeocode } from "../services/geocoding";
 
-// Leaflet resolves its default icons from a CDN path; bundle them instead.
 const defaultIcon = L.icon({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
@@ -27,7 +26,6 @@ const TILE_ATTRIBUTION =
   import.meta.env.VITE_MAP_TILE_ATTRIBUTION ??
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
-// Bhopal city centre — only the initial view, never submitted as a location.
 const DEFAULT_CENTER = [23.2599, 77.4126];
 
 function ClickHandler({ onPick }) {

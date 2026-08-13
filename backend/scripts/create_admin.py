@@ -1,8 +1,3 @@
-"""Create an admin user via controlled server-side mechanism.
-
-Usage:
-    python -m scripts.create_admin admin@example.com SecurePass123
-"""
 import sys
 
 from app.core.database import SessionLocal

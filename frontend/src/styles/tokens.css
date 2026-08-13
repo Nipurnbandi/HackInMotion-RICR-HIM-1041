@@ -1,5 +1,3 @@
-/* Shared design tokens for the SmartCity portal. */
-
 :root {
   --color-bg: #f4f6fa;
   --color-surface: #ffffff;
@@ -50,7 +48,6 @@
   --content-width: 1080px;
 }
 
-/* Every interactive element keeps a clearly visible focus ring. */
 :where(a, button, input, textarea, select, [tabindex]):focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
