@@ -50,6 +50,8 @@ sequenceDiagram
 
 ## ⚡ The features that make it powerful
 
+> 📘 **Want the exact rules?** [`docs/FUNCTIONALITY.md`](docs/FUNCTIONALITY.md) is the full functional specification — every threshold, formula, state transition and edge case, with worked examples and the defining source file for each.
+
 ### 🔁 One problem = one case (custom duplicate detection)
 Fifteen people reporting the same pothole doesn't create fifteen tickets. Each new report is checked against **per-category geographic radii** (25 m for a pothole … 80 m for a water leak) and **recency windows** (3–60 days) — a match links the report into the existing case, and every reporter still tracks it under their own ID. The citizen count then *boosts* the case's priority, so mass-reported problems rise to the top instead of clogging the queue.
 
@@ -159,8 +161,11 @@ cd frontend && npm test           # 59 tests — wizard, dashboards, maps, lifec
 
 | Document | Contents |
 |---|---|
-| [api-documentation.md](api-documentation.md) | Full endpoint reference — auth, citizen, admin, public |
+| **[docs/FUNCTIONALITY.md](docs/FUNCTIONALITY.md)** | **Full functional specification** — 25 sections covering permissions, the category constants table, the duplicate-detection algorithm, priority & transparency formulas (with worked examples), the lifecycle state machine, hotspot detection, the error-handling catalogue, and the data model |
+| [api-documentation.md](api-documentation.md) | Endpoint reference — auth, citizen, admin, public |
 | [docs/architecture.mmd](docs/architecture.mmd) | Editable Mermaid source of the architecture diagram |
 | `backend/.env.example` | Every configuration knob, annotated |
+
+**Quick links into the spec:** [duplicate detection](docs/FUNCTIONALITY.md#6-duplicate-detection--case-grouping) · [priority scoring](docs/FUNCTIONALITY.md#8-priority-scoring) · [SLA escalation](docs/FUNCTIONALITY.md#9-sla-escalation) · [lifecycle](docs/FUNCTIONALITY.md#11-issue-lifecycle--status-workflow) · [transparency scoring](docs/FUNCTIONALITY.md#20-public-transparency-scoring) · [error handling](docs/FUNCTIONALITY.md#23-error-handling-catalogue) · [data model](docs/FUNCTIONALITY.md#24-data-model)
 
 **Tech stack:** FastAPI · SQLAlchemy 2 · Alembic · PostgreSQL · Pydantic v2 · React 19 · Vite · React Router 7 · react-leaflet · Anthropic Claude API (vision) · pytest · Vitest + Testing Library.
