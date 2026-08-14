@@ -66,6 +66,12 @@ export default function AdminDashboard() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState("");
 
+  const [resolutionFor, setResolutionFor] = useState(null);
+  const [resolutionNote, setResolutionNote] = useState("");
+  const [resolutionFile, setResolutionFile] = useState(null);
+  const [resolutionBusy, setResolutionBusy] = useState(false);
+  const [resolutionError, setResolutionError] = useState("");
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -152,6 +158,39 @@ export default function AdminDashboard() {
       await load();
     } catch (err) {
       setError(err.message || "We couldn't update the status.");
+    }
+  }
+
+  function toggleResolution(caseItem) {
+    setResolutionError("");
+    setResolutionFile(null);
+    if (resolutionFor === caseItem.id) {
+      setResolutionFor(null);
+    } else {
+      setResolutionFor(caseItem.id);
+      setResolutionNote(caseItem.resolution_note || "");
+    }
+  }
+
+  async function saveResolution(caseItem) {
+    setResolutionBusy(true);
+    setResolutionError("");
+    try {
+      if (resolutionNote !== (caseItem.resolution_note || "")) {
+        await adminService.updateResolutionNote(caseItem.id, resolutionNote);
+      }
+      if (resolutionFile) {
+        await adminService.uploadResolutionPhoto(caseItem.id, resolutionFile);
+      }
+      setResolutionFor(null);
+      setResolutionFile(null);
+      setMapIssues(null);
+      setAnalytics(null);
+      await load();
+    } catch (err) {
+      setResolutionError(err.message || "We couldn't save the resolution details.");
+    } finally {
+      setResolutionBusy(false);
     }
   }
 
@@ -380,6 +419,16 @@ export default function AdminDashboard() {
                                     ))}
                                   </select>
                                 </span>
+                                <button
+                                  type="button"
+                                  className="link link--button resolution-toggle"
+                                  aria-expanded={resolutionFor === item.id}
+                                  onClick={() => toggleResolution(item)}
+                                >
+                                  {item.resolution_note || item.resolution_photo_url
+                                    ? "📝 Edit resolution"
+                                    : "📝 Add resolution"}
+                                </button>
                                 {item.department_name && (
                                   <span className="dept-badge">{item.department_name}</span>
                                 )}
@@ -399,6 +448,88 @@ export default function AdminDashboard() {
                                 </span>
                               </span>
                             </div>
+
+                            {resolutionFor === item.id && (
+                              <div className="resolution-editor">
+                                <div className="field">
+                                  <label
+                                    className="field__label"
+                                    htmlFor={`resolution-note-${item.id}`}
+                                  >
+                                    Resolution note{" "}
+                                    <span className="field-optional">
+                                      (visible to the reporter)
+                                    </span>
+                                  </label>
+                                  <textarea
+                                    id={`resolution-note-${item.id}`}
+                                    className="textarea"
+                                    rows={3}
+                                    placeholder="What was done to fix this issue?"
+                                    value={resolutionNote}
+                                    onChange={(event) =>
+                                      setResolutionNote(event.target.value)
+                                    }
+                                  />
+                                </div>
+
+                                <div className="field">
+                                  <label
+                                    className="field__label"
+                                    htmlFor={`resolution-photo-${item.id}`}
+                                  >
+                                    Proof-of-resolution photo{" "}
+                                    <span className="field-optional">(optional)</span>
+                                  </label>
+                                  <input
+                                    id={`resolution-photo-${item.id}`}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="image-uploader__input"
+                                    onChange={(event) =>
+                                      setResolutionFile(
+                                        event.target.files?.[0] ?? null
+                                      )
+                                    }
+                                  />
+                                  {item.resolution_photo_url && (
+                                    <a
+                                      href={item.resolution_photo_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="link"
+                                    >
+                                      View current proof photo
+                                    </a>
+                                  )}
+                                </div>
+
+                                {resolutionError && (
+                                  <p className="field-error" role="alert">
+                                    {resolutionError}
+                                  </p>
+                                )}
+
+                                <div className="resolution-editor__actions">
+                                  <button
+                                    type="button"
+                                    className="button button--primary"
+                                    disabled={resolutionBusy}
+                                    onClick={() => saveResolution(item)}
+                                  >
+                                    {resolutionBusy ? "Saving…" : "Save resolution"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="button button--ghost"
+                                    disabled={resolutionBusy}
+                                    onClick={() => setResolutionFor(null)}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </li>
                         ))}
                       </ul>

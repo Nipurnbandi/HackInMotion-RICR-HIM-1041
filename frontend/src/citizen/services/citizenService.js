@@ -67,6 +67,10 @@ export const citizenService = {
 
   getIssue: (id) => request(`/citizen/issues/${id}`),
 
+  confirmIssue: (id) => request(`/citizen/issues/${id}/confirm`, { method: "POST" }),
+
+  reopenIssue: (id) => request(`/citizen/issues/${id}/reopen`, { method: "POST" }),
+
   createIssue(values, { onProgress } = {}) {
     const form = new FormData();
     form.append("category", values.category);

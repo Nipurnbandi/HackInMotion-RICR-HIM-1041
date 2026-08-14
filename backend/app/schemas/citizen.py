@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 from app.core.issue_types import IssueCategory, IssueStatus
+from app.core.roles import Role
 
 DESCRIPTION_MIN_LENGTH = 10
 DESCRIPTION_MAX_LENGTH = 2000
@@ -44,10 +45,28 @@ class IssueResponse(BaseModel):
     address: str | None
     photo_url: str | None
     status: IssueStatus
+    resolution_note: str = ""
+    resolution_photo_url: str | None = None
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class StatusHistoryResponse(BaseModel):
+    id: int
+    old_status: IssueStatus | None
+    new_status: IssueStatus
+    note: str
+    photo_url: str | None
+    changed_by_role: Role
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class IssueDetailResponse(IssueResponse):
+    history: list[StatusHistoryResponse] = []
 
 
 class MapIssueResponse(BaseModel):

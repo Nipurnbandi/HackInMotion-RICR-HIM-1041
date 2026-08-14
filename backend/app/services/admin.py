@@ -12,9 +12,11 @@ from app.core.issue_types import (
     IssueStatus,
 )
 from app.core.roles import Role
+from app.core.storage import Storage, get_storage
 from app.models import Department, Issue, User
 from app.schemas.admin import IssueUpdate
 from app.services.city_map import case_report_counts
+from app.services.lifecycle import record_status_change
 
 HOTSPOT_CELL_PRECISION = 3  # ~110m grid cells
 HOTSPOT_MIN_REPORTS = 2
@@ -243,17 +245,65 @@ def list_departments(db: Session) -> list[dict]:
     ]
 
 
-def update_issue(db: Session, issue_id: int, data: IssueUpdate) -> Issue:
+def _get_issue_or_404(db: Session, issue_id: int) -> Issue:
     issue = db.get(Issue, issue_id)
     if not issue:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Issue not found",
         )
+    return issue
+
+
+def update_issue(db: Session, issue_id: int, data: IssueUpdate) -> Issue:
+    issue = _get_issue_or_404(db, issue_id)
 
     updates = data.model_dump(exclude_unset=True)
+    old_status = issue.status
     for field, value in updates.items():
         setattr(issue, field, value)
+
+    status_changed = issue.status != old_status
+    note = updates.get("resolution_note") or ""
+    if status_changed or note:
+        record_status_change(
+            db,
+            issue,
+            old_status=old_status,
+            new_status=issue.status,
+            note=note,
+            role=Role.ADMIN,
+        )
+
+    db.commit()
+    db.refresh(issue)
+    return issue
+
+
+def save_resolution_proof(
+    db: Session,
+    issue_id: int,
+    *,
+    content: bytes,
+    extension: str,
+    storage: Storage | None = None,
+) -> Issue:
+    issue = _get_issue_or_404(db, issue_id)
+
+    storage = storage or get_storage()
+    photo_url = storage.save(
+        content=content, extension=extension, prefix="resolutions"
+    )
+    issue.resolution_photo_url = photo_url
+    record_status_change(
+        db,
+        issue,
+        old_status=issue.status,
+        new_status=issue.status,
+        note="Proof of resolution uploaded.",
+        photo_url=photo_url,
+        role=Role.ADMIN,
+    )
 
     db.commit()
     db.refresh(issue)

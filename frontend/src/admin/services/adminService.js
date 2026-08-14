@@ -52,4 +52,20 @@ export const adminService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     }),
+
+  updateResolutionNote: (issueId, note) =>
+    request(`/admin/issues/${issueId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resolution_note: note }),
+    }),
+
+  uploadResolutionPhoto: (issueId, file) => {
+    const form = new FormData();
+    form.append("photo", file, file.name);
+    return request(`/admin/issues/${issueId}/resolution-photo`, {
+      method: "POST",
+      body: form,
+    });
+  },
 };

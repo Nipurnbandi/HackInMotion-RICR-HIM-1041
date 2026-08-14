@@ -15,9 +15,16 @@ from app.core.issue_types import (
     IssueCategory,
     IssueStatus,
 )
+from app.core.roles import Role
 from app.core.storage import Storage, get_storage
 from app.models import Issue, User
-from app.schemas.citizen import IssueCreate, IssueResponse
+from app.schemas.citizen import (
+    IssueCreate,
+    IssueDetailResponse,
+    IssueResponse,
+    StatusHistoryResponse,
+)
+from app.services.lifecycle import list_issue_history, record_status_change
 from app.services.routing import resolve_department
 
 TRACKING_ID_PREFIX = "SMC"
@@ -158,9 +165,20 @@ def create_citizen_issue(
     if matched_case_id is not None:
         issue.case_id = matched_case_id
         issue.is_primary = False
+        note = f"Report submitted and linked to existing case {matched_case_id}."
     else:
         issue.case_id = build_case_id(issue.id)
         issue.is_primary = True
+        note = "Report submitted."
+
+    record_status_change(
+        db,
+        issue,
+        old_status=None,
+        new_status=IssueStatus.SUBMITTED,
+        note=note,
+        role=Role.CITIZEN,
+    )
 
     db.commit()
     db.refresh(issue)
@@ -183,6 +201,19 @@ def issue_response(
     if status_override is not None:
         response.status = status_override
     return response
+
+
+def issue_detail_response(
+    db: Session, issue: Issue, status_override: IssueStatus | None = None
+) -> IssueDetailResponse:
+    base = issue_response(issue, status_override)
+    return IssueDetailResponse(
+        **base.model_dump(),
+        history=[
+            StatusHistoryResponse.model_validate(entry)
+            for entry in list_issue_history(db, issue)
+        ],
+    )
 
 
 def issue_effective_status(db: Session, issue: Issue) -> IssueStatus:

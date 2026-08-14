@@ -13,6 +13,8 @@ vi.mock("../admin/services/adminService", () => ({
     updateStatus: vi.fn(),
     getAnalytics: vi.fn(),
     getMapIssues: vi.fn(),
+    updateResolutionNote: vi.fn(),
+    uploadResolutionPhoto: vi.fn(),
   },
 }));
 
@@ -361,6 +363,28 @@ describe("AdminDashboard", () => {
 
     expect(screen.getByText("Hotspot Junction, Bhopal")).toBeInTheDocument();
     expect(screen.getByText(/Mostly Pothole · 2 problems/i)).toBeInTheDocument();
+  });
+
+  it("lets the admin record a resolution note for a case", async () => {
+    adminService.updateResolutionNote.mockResolvedValue({});
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("Pothole");
+
+    const [toggle] = screen.getAllByRole("button", { name: /Add resolution/i });
+    await user.click(toggle);
+
+    const noteField = screen.getByLabelText(/Resolution note/i);
+    await user.type(noteField, "Filled and re-surfaced.");
+    await user.click(screen.getByRole("button", { name: "Save resolution" }));
+
+    await waitFor(() => {
+      expect(adminService.updateResolutionNote).toHaveBeenCalledWith(
+        1,
+        "Filled and re-surfaced."
+      );
+    });
+    expect(adminService.uploadResolutionPhoto).not.toHaveBeenCalled();
   });
 
   it("shows the unread notification count and marks one as read", async () => {

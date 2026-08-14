@@ -95,3 +95,6 @@ class IssueUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
     status: IssueStatus | None = None
+    resolution_note: str | None = Field(
+        default=None, max_length=DESCRIPTION_MAX_LENGTH
+    )

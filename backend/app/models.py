@@ -67,6 +67,11 @@ class Issue(Base, TimestampMixin):
         index=True,
     )
 
+    resolution_note: Mapped[str] = mapped_column(Text, default="", server_default="")
+    resolution_photo_url: Mapped[str | None] = mapped_column(
+        String(500), default=None
+    )
+
     case_id: Mapped[str | None] = mapped_column(String(32), index=True, default=None)
     is_primary: Mapped[bool] = mapped_column(default=True, server_default=true())
 
@@ -79,6 +84,26 @@ class Issue(Base, TimestampMixin):
 
     __table_args__ = (
         Index("ix_issues_dup_lookup", "category", "latitude", "longitude"),
+    )
+
+
+class StatusHistory(Base, TimestampMixin):
+    __tablename__ = "status_history"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    issue_id: Mapped[int] = mapped_column(
+        ForeignKey("issues.id", ondelete="CASCADE"), index=True
+    )
+    old_status: Mapped[IssueStatus | None] = mapped_column(
+        Enum(IssueStatus, name="issue_status", native_enum=False), default=None
+    )
+    new_status: Mapped[IssueStatus] = mapped_column(
+        Enum(IssueStatus, name="issue_status", native_enum=False)
+    )
+    note: Mapped[str] = mapped_column(Text, default="", server_default="")
+    photo_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    changed_by_role: Mapped[Role] = mapped_column(
+        Enum(Role, name="role", native_enum=False), default=Role.CITIZEN
     )
 
 

@@ -23,6 +23,7 @@ from app.models import User
 from app.schemas.citizen import (
     CitizenDashboardResponse,
     IssueCreate,
+    IssueDetailResponse,
     IssueListResponse,
     IssueResponse,
     IssueStats,
@@ -33,12 +34,14 @@ from app.services.citizen import (
     get_citizen_dashboard,
     get_citizen_issue,
     get_citizen_stats,
+    issue_detail_response,
     issue_effective_status,
     issue_response,
     list_citizen_issues,
     validate_photo,
 )
 from app.services.city_map import list_map_issues
+from app.services.lifecycle import confirm_resolution, reopen_issue
 from app.services.notification import notify_new_case, send_pending_notifications
 
 router = APIRouter(prefix="/citizen", tags=["citizen"])
@@ -159,11 +162,33 @@ def get_my_issues(
     )
 
 
-@router.get("/issues/{issue_id}", response_model=IssueResponse)
+@router.get("/issues/{issue_id}", response_model=IssueDetailResponse)
 def get_my_issue(
     issue_id: int,
     current_user: User = Depends(citizen_only),
     db: Session = Depends(get_db),
 ):
     issue = get_citizen_issue(db, current_user, issue_id)
-    return issue_response(issue, issue_effective_status(db, issue))
+    return issue_detail_response(db, issue, issue_effective_status(db, issue))
+
+
+@router.post("/issues/{issue_id}/confirm", response_model=IssueDetailResponse)
+def confirm_my_issue(
+    issue_id: int,
+    current_user: User = Depends(citizen_only),
+    db: Session = Depends(get_db),
+):
+    issue = get_citizen_issue(db, current_user, issue_id)
+    issue = confirm_resolution(db, issue)
+    return issue_detail_response(db, issue, issue_effective_status(db, issue))
+
+
+@router.post("/issues/{issue_id}/reopen", response_model=IssueDetailResponse)
+def reopen_my_issue(
+    issue_id: int,
+    current_user: User = Depends(citizen_only),
+    db: Session = Depends(get_db),
+):
+    issue = get_citizen_issue(db, current_user, issue_id)
+    issue = reopen_issue(db, issue)
+    return issue_detail_response(db, issue, issue_effective_status(db, issue))

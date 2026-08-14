@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import require_roles
 from app.core.roles import Role
@@ -24,9 +25,11 @@ from app.services.admin import (
     get_admin_dashboard,
     list_admin_cases,
     list_departments,
+    save_resolution_proof,
     update_issue,
 )
 from app.services.city_map import list_map_issues
+from app.services.citizen import validate_photo
 from app.services.notification import list_notifications, mark_notification_read
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -139,6 +142,22 @@ def admin_update_issue(
     db: Session = Depends(get_db),
 ):
     return update_issue(db, issue_id, data)
+
+
+@router.post("/issues/{issue_id}/resolution-photo", response_model=AdminIssueResponse)
+async def admin_upload_resolution_photo(
+    issue_id: int,
+    photo: Annotated[UploadFile, File()],
+    _: User = Depends(admin_only),
+    db: Session = Depends(get_db),
+):
+    content = await photo.read(settings.max_upload_size_bytes + 1)
+    extension = validate_photo(
+        content=content,
+        max_bytes=settings.max_upload_size_bytes,
+        declared_content_type=photo.content_type,
+    )
+    return save_resolution_proof(db, issue_id, content=content, extension=extension)
 
 
 @router.delete("/issues/{issue_id}", status_code=status.HTTP_204_NO_CONTENT)
