@@ -86,8 +86,11 @@ const CASES = [
     created_at: "2026-08-09T09:00:00Z",
     updated_at: "2026-08-09T09:00:00Z",
     citizen_count: 3,
+    vote_count: 2,
     days_open: 3,
     priority_score: 17.1,
+    escalated: true,
+    sla_days: 7,
     department_code: "ROADS",
     department_name: "Roads Department",
   },
@@ -106,8 +109,11 @@ const CASES = [
     created_at: "2026-08-12T09:00:00Z",
     updated_at: "2026-08-12T09:00:00Z",
     citizen_count: 1,
+    vote_count: 0,
     days_open: 0,
     priority_score: 2.0,
+    escalated: false,
+    sla_days: 2,
     department_code: "SANITATION",
     department_name: "Sanitation Department",
   },
@@ -319,6 +325,17 @@ describe("AdminDashboard", () => {
       expect(adminService.updateStatus).toHaveBeenCalledWith(1, "IN_PROGRESS");
     });
     expect(adminService.listCases.mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it("flags SLA-breached cases and shows citizen support", async () => {
+    renderPage();
+
+    const rows = (await screen.findAllByRole("listitem")).filter((li) =>
+      li.className.includes("issue-card")
+    );
+    expect(within(rows[0]).getByText("⚠ SLA breached")).toBeInTheDocument();
+    expect(within(rows[0]).getByText("👍 2 supporters")).toBeInTheDocument();
+    expect(within(rows[1]).queryByText("⚠ SLA breached")).not.toBeInTheDocument();
   });
 
   it("does not fetch map or analytics data until those views open", async () => {

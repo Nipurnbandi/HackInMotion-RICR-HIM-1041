@@ -28,6 +28,7 @@ from app.schemas.citizen import (
     IssueResponse,
     IssueStats,
     MapIssueResponse,
+    VoteResponse,
 )
 from app.services.citizen import (
     create_citizen_issue,
@@ -43,6 +44,7 @@ from app.services.citizen import (
 from app.services.city_map import list_map_issues
 from app.services.lifecycle import confirm_resolution, reopen_issue
 from app.services.notification import notify_new_case, send_pending_notifications
+from app.services.votes import toggle_vote
 
 router = APIRouter(prefix="/citizen", tags=["citizen"])
 
@@ -87,10 +89,19 @@ def citizen_dashboard(
 
 @router.get("/map", response_model=list[MapIssueResponse])
 def citizen_city_map(
-    _: User = Depends(citizen_only),
+    current_user: User = Depends(citizen_only),
     db: Session = Depends(get_db),
 ):
-    return list_map_issues(db)
+    return list_map_issues(db, for_user=current_user)
+
+
+@router.post("/issues/{issue_id}/vote", response_model=VoteResponse)
+def vote_on_issue(
+    issue_id: int,
+    current_user: User = Depends(citizen_only),
+    db: Session = Depends(get_db),
+):
+    return toggle_vote(db, current_user, issue_id)
 
 
 @router.get("/issues/stats", response_model=IssueStats)

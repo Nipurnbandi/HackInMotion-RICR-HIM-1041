@@ -30,6 +30,7 @@ from app.services.admin import (
 )
 from app.services.city_map import list_map_issues
 from app.services.citizen import validate_photo
+from app.services.escalation import run_sla_escalations
 from app.services.notification import list_notifications, mark_notification_read
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -42,8 +43,11 @@ def case_response(case: dict) -> AdminCaseResponse:
         {
             **AdminIssueResponse.model_validate(case["issue"]).model_dump(),
             "citizen_count": case["citizen_count"],
+            "vote_count": case["vote_count"],
             "days_open": case["days_open"],
             "priority_score": case["priority_score"],
+            "escalated": case["escalated"],
+            "sla_days": case["sla_days"],
             "department_code": case["department_code"],
             "department_name": case["department_name"],
         }
@@ -55,6 +59,7 @@ def admin_dashboard(
     current_user: User = Depends(admin_only),
     db: Session = Depends(get_db),
 ):
+    run_sla_escalations(db)
     return get_admin_dashboard(db, current_user)
 
 
@@ -63,6 +68,7 @@ def admin_analytics(
     _: User = Depends(admin_only),
     db: Session = Depends(get_db),
 ):
+    run_sla_escalations(db)
     return get_admin_analytics(db)
 
 
@@ -88,6 +94,7 @@ def admin_list_issues(
     _: User = Depends(admin_only),
     db: Session = Depends(get_db),
 ):
+    run_sla_escalations(db)
     return [
         case_response(case)
         for case in list_admin_cases(db, department_code=department)

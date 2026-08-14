@@ -1,5 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
+import { LanguageProvider } from "./shared/i18n";
+import TransparencyPage from "./public/TransparencyPage";
 import Login from "./auth/Login";
 import Signup from "./auth/Signup";
 import AdminDashboard from "./admin/pages/AdminDashboard";
@@ -32,10 +34,12 @@ function HomeRedirect() {
 export default function App() {
   return (
     <AuthProvider>
+      <LanguageProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/transparency" element={<TransparencyPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route
@@ -69,6 +73,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

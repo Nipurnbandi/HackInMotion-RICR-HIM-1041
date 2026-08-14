@@ -1,23 +1,27 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
+import { LANGUAGES, useI18n } from "../../shared/i18n";
 import "../../styles/tokens.css";
 import "../../styles/citizen.css";
 
 const NAV_ITEMS = [
-  { to: "/citizen", label: "Home", end: true },
-  { to: "/citizen/map", label: "City Map" },
-  { to: "/citizen/report", label: "Report" },
-  { to: "/citizen/issues", label: "My Reports" },
-  { to: "/citizen/help", label: "Help" },
-  { to: "/citizen/profile", label: "Profile" },
+  { to: "/citizen", key: "nav.home", fallback: "Home", end: true },
+  { to: "/citizen/map", key: "nav.citymap", fallback: "City Map" },
+  { to: "/citizen/report", key: "nav.report", fallback: "Report" },
+  { to: "/citizen/issues", key: "nav.myreports", fallback: "My Reports" },
+  { to: "/citizen/help", key: "nav.help", fallback: "Help" },
+  { to: "/citizen/profile", key: "nav.profile", fallback: "Profile" },
 ];
 
 export default function CitizenLayout() {
   const { user, logout } = useAuth();
+  const { lang, setLang, t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const nextLanguage = LANGUAGES.find((item) => item.code !== lang) ?? LANGUAGES[0];
 
   async function handleLogout() {
     await logout();
@@ -37,7 +41,8 @@ export default function CitizenLayout() {
               🏙
             </span>
             <span className="brand__text">
-              SmartCity<span className="brand__sub">Citizen Portal</span>
+              SmartCity
+              <span className="brand__sub">{t("brand.sub", "Citizen Portal")}</span>
             </span>
           </Link>
 
@@ -69,16 +74,24 @@ export default function CitizenLayout() {
                 }
                 onClick={() => setMenuOpen(false)}
               >
-                {item.label}
+                {t(item.key, item.fallback)}
               </NavLink>
             ))}
 
             <div className="citizen-nav__account">
+              <button
+                type="button"
+                className="lang-toggle"
+                onClick={() => setLang(nextLanguage.code)}
+                title={`Switch language to ${nextLanguage.label}`}
+              >
+                🌐 {nextLanguage.label}
+              </button>
               <span className="citizen-nav__email" title={user?.email}>
                 {user?.email}
               </span>
               <button type="button" className="button button--ghost" onClick={handleLogout}>
-                Log out
+                {t("nav.logout", "Log out")}
               </button>
             </div>
           </nav>
@@ -91,8 +104,15 @@ export default function CitizenLayout() {
 
       <footer className="citizen-footer">
         <p>
-          SmartCity Civic Issue Reporting · Reports are reviewed by your city
-          administration.
+          {t(
+            "footer.note",
+            "SmartCity Civic Issue Reporting · Reports are reviewed by your city administration."
+          )}
+        </p>
+        <p>
+          <Link to="/transparency" className="link">
+            {t("footer.transparency", "City transparency report card")}
+          </Link>
         </p>
       </footer>
     </div>

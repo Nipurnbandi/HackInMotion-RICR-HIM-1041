@@ -60,6 +60,8 @@ export const citizenService = {
 
   getCityMap: () => request("/citizen/map"),
 
+  voteIssue: (id) => request(`/citizen/issues/${id}/vote`, { method: "POST" }),
+
   getStats: () => request("/citizen/issues/stats"),
 
   listIssues: ({ status, search, page = 1, pageSize = 20 } = {}) =>

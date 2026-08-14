@@ -63,8 +63,11 @@ class AdminIssueResponse(IssueResponse):
 
 class AdminCaseResponse(AdminIssueResponse):
     citizen_count: int
+    vote_count: int
     days_open: int
     priority_score: float
+    escalated: bool
+    sla_days: int
     department_code: str | None
     department_name: str | None
 

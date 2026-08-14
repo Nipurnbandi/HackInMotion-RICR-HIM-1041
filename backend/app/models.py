@@ -1,6 +1,17 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, String, Text, func, true
+from sqlalchemy import (
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    true,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -71,6 +82,9 @@ class Issue(Base, TimestampMixin):
     resolution_photo_url: Mapped[str | None] = mapped_column(
         String(500), default=None
     )
+    escalated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
 
     case_id: Mapped[str | None] = mapped_column(String(32), index=True, default=None)
     is_primary: Mapped[bool] = mapped_column(default=True, server_default=true())
@@ -84,6 +98,22 @@ class Issue(Base, TimestampMixin):
 
     __table_args__ = (
         Index("ix_issues_dup_lookup", "category", "latitude", "longitude"),
+    )
+
+
+class IssueVote(Base, TimestampMixin):
+    __tablename__ = "issue_votes"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    issue_id: Mapped[int] = mapped_column(
+        ForeignKey("issues.id", ondelete="CASCADE"), index=True
+    )
+    citizen_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint("issue_id", "citizen_id", name="uq_issue_votes_issue_citizen"),
     )
 
 

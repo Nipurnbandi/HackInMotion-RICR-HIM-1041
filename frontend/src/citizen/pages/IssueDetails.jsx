@@ -5,6 +5,7 @@ import StatusBadge from "../../shared/components/StatusBadge";
 import StatusTimeline from "../components/StatusTimeline";
 import { EmptyState, ErrorState, LoadingState } from "../../shared/components/States";
 import { categoryIcon, categoryLabel, statusLabel } from "../../shared/constants";
+import { useI18n } from "../../shared/i18n";
 import { formatCoordinates } from "../services/geocoding";
 import { citizenService } from "../services/citizenService";
 
@@ -19,18 +20,22 @@ function formatDateTime(value) {
   });
 }
 
-function historyLabel(entry) {
-  if (entry.old_status == null) return "Report submitted";
+function historyLabel(entry, t) {
+  const localizedStatus = (value) => t(`status.${value}.label`, statusLabel(value));
+  if (entry.old_status == null) {
+    return t("details.submittedEntry", "Report submitted");
+  }
   if (entry.old_status === entry.new_status) {
     return entry.new_status === "RESOLVED" && entry.photo_url
-      ? "Proof of resolution added"
-      : statusLabel(entry.new_status);
+      ? t("details.proofAdded", "Proof of resolution added")
+      : localizedStatus(entry.new_status);
   }
-  return `${statusLabel(entry.old_status)} → ${statusLabel(entry.new_status)}`;
+  return `${localizedStatus(entry.old_status)} → ${localizedStatus(entry.new_status)}`;
 }
 
 export default function IssueDetails() {
   const { issueId } = useParams();
+  const { t } = useI18n();
   const [issue, setIssue] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -77,7 +82,7 @@ export default function IssueDetails() {
   if (loading) {
     return (
       <div className="page page--narrow">
-        <LoadingState label="Loading report…" />
+        <LoadingState label={t("details.loading", "Loading report…")} />
       </div>
     );
   }
@@ -110,12 +115,12 @@ export default function IssueDetails() {
   return (
     <div className="page page--narrow">
       <Link to="/citizen/issues" className="back-link">
-        ← Back to my reports
+        {t("details.back", "← Back to my reports")}
       </Link>
 
       <div className="page-heading page-heading--row">
         <div>
-          <p className="muted">Issue</p>
+          <p className="muted">{t("details.issue", "Issue")}</p>
           <h1 className="tracking-heading">{issue.tracking_id}</h1>
         </div>
         <StatusBadge status={issue.status} />
@@ -124,7 +129,7 @@ export default function IssueDetails() {
       <div className="detail-grid">
         <section className="card" aria-labelledby="progress-heading">
           <h2 className="card__title" id="progress-heading">
-            Progress
+            {t("details.progress", "Progress")}
           </h2>
           <StatusTimeline status={issue.status} />
 
@@ -135,12 +140,18 @@ export default function IssueDetails() {
                 entry.note?.toLowerCase().includes("reporter confirmed")
               ) ? (
                 <p className="resolution-actions__thanks">
-                  ✅ You confirmed this fix. Thank you for closing the loop!
+                  {t(
+                    "details.confirmedThanks",
+                    "✅ You confirmed this fix. Thank you for closing the loop!"
+                  )}
                 </p>
               ) : (
                 <>
                   <p className="resolution-actions__hint">
-                    Marked as resolved — does it look fixed to you?
+                    {t(
+                      "details.confirmQuestion",
+                      "Marked as resolved — does it look fixed to you?"
+                    )}
                   </p>
                   <div className="resolution-actions__buttons">
                     <button
@@ -149,7 +160,9 @@ export default function IssueDetails() {
                       disabled={Boolean(actionBusy)}
                       onClick={() => runAction("confirm")}
                     >
-                      {actionBusy === "confirm" ? "Confirming…" : "Yes, it's fixed"}
+                      {actionBusy === "confirm"
+                        ? t("details.confirming", "Confirming…")
+                        : t("details.confirmYes", "Yes, it's fixed")}
                     </button>
                     <button
                       type="button"
@@ -157,7 +170,9 @@ export default function IssueDetails() {
                       disabled={Boolean(actionBusy)}
                       onClick={() => runAction("reopen")}
                     >
-                      {actionBusy === "reopen" ? "Reopening…" : "No, reopen it"}
+                      {actionBusy === "reopen"
+                        ? t("details.reopening", "Reopening…")
+                        : t("details.reopenNo", "No, reopen it")}
                     </button>
                   </div>
                 </>
@@ -174,7 +189,7 @@ export default function IssueDetails() {
         {(issue.resolution_note || issue.resolution_photo_url) && (
           <section className="card" aria-labelledby="resolution-heading">
             <h2 className="card__title" id="resolution-heading">
-              Resolution
+              {t("details.resolution", "Resolution")}
             </h2>
 
             {issue.resolution_note && (
@@ -201,7 +216,7 @@ export default function IssueDetails() {
         {issue.history?.length > 0 && (
           <section className="card" aria-labelledby="history-heading">
             <h2 className="card__title" id="history-heading">
-              Activity history
+              {t("details.history", "Activity history")}
             </h2>
             <ol className="history-list">
               {issue.history.map((entry) => (
@@ -209,10 +224,12 @@ export default function IssueDetails() {
                   <span className="history-item__meta">
                     {formatDateTime(entry.created_at)} ·{" "}
                     {entry.changed_by_role === "ADMIN"
-                      ? "City administration"
-                      : "Reporter"}
+                      ? t("details.byAdmin", "City administration")
+                      : t("details.byReporter", "Reporter")}
                   </span>
-                  <span className="history-item__label">{historyLabel(entry)}</span>
+                  <span className="history-item__label">
+                    {historyLabel(entry, t)}
+                  </span>
                   {entry.note && (
                     <span className="history-item__note">{entry.note}</span>
                   )}
@@ -224,27 +241,27 @@ export default function IssueDetails() {
 
         <section className="card" aria-labelledby="details-heading">
           <h2 className="card__title" id="details-heading">
-            Report details
+            {t("details.reportdetails", "Report details")}
           </h2>
 
           <dl className="detail-list">
             <div>
-              <dt>Category</dt>
+              <dt>{t("details.category", "Category")}</dt>
               <dd>
                 <span aria-hidden="true">{categoryIcon(issue.category)} </span>
-                {categoryLabel(issue.category)}
+                {t(`category.${issue.category}.label`, categoryLabel(issue.category))}
               </dd>
             </div>
             <div>
-              <dt>Reported</dt>
+              <dt>{t("details.reported", "Reported")}</dt>
               <dd>{formatDateTime(issue.created_at)}</dd>
             </div>
             <div>
-              <dt>Last updated</dt>
+              <dt>{t("details.updated", "Last updated")}</dt>
               <dd>{formatDateTime(issue.updated_at)}</dd>
             </div>
             <div>
-              <dt>Description</dt>
+              <dt>{t("details.description", "Description")}</dt>
               <dd className="detail-description">{issue.description}</dd>
             </div>
           </dl>
@@ -252,7 +269,7 @@ export default function IssueDetails() {
 
         <section className="card" aria-labelledby="location-heading">
           <h2 className="card__title" id="location-heading">
-            Location
+            {t("details.location", "Location")}
           </h2>
 
           <IssueLocationMap
@@ -265,13 +282,13 @@ export default function IssueDetails() {
 
           <dl className="detail-list detail-list--compact">
             <div>
-              <dt>Address</dt>
-              <dd>{issue.address || "Not available"}</dd>
+              <dt>{t("details.address", "Address")}</dt>
+              <dd>{issue.address || "—"}</dd>
             </div>
             <div>
-              <dt>Coordinates</dt>
+              <dt>{t("details.coordinates", "Coordinates")}</dt>
               <dd className="mono">
-                {formatCoordinates(issue.latitude, issue.longitude) || "Not recorded"}
+                {formatCoordinates(issue.latitude, issue.longitude) || "—"}
               </dd>
             </div>
           </dl>
@@ -279,7 +296,7 @@ export default function IssueDetails() {
 
         <section className="card" aria-labelledby="evidence-heading">
           <h2 className="card__title" id="evidence-heading">
-            Photo evidence
+            {t("details.photo", "Photo evidence")}
           </h2>
 
           {issue.photo_url ? (
@@ -293,7 +310,9 @@ export default function IssueDetails() {
               <span className="evidence__hint">Open full size</span>
             </a>
           ) : (
-            <p className="muted">No photo was attached to this report.</p>
+            <p className="muted">
+              {t("details.nophoto", "No photo was attached to this report.")}
+            </p>
           )}
         </section>
       </div>

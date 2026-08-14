@@ -1,0 +1,153 @@
+.transparency-nav {
+  margin-left: auto;
+}
+
+.score-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.score-ring {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 2px;
+  flex-shrink: 0;
+  border: 6px solid var(--color-neutral);
+  background: var(--color-surface-muted);
+}
+
+.score-ring--good {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.score-ring--ok {
+  border-color: var(--color-info);
+  background: var(--color-info-soft);
+}
+
+.score-ring--warn {
+  border-color: var(--color-warning);
+  background: var(--color-warning-soft);
+}
+
+.score-ring--bad {
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.score-ring__grade {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.score-ring__score {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.score-hero__stats {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-4);
+  min-width: 240px;
+}
+
+.score-hero__stats dt {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-subtle);
+  margin-bottom: var(--space-1);
+}
+
+.score-hero__stats dd {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.deptcard-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.deptcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.deptcard__name {
+  font-size: 1rem;
+}
+
+.grade-badge {
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-sm);
+  font-weight: 800;
+  white-space: nowrap;
+  background: var(--color-neutral-soft);
+  color: var(--color-neutral);
+}
+
+.grade-badge--good {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.grade-badge--ok {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
+.grade-badge--warn {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.grade-badge--bad {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.deptcard__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3) var(--space-4);
+}
+
+.deptcard__stats dt {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-subtle);
+  margin-bottom: 2px;
+}
+
+.deptcard__stats dd {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.transparency-methodology {
+  max-width: 72ch;
+}

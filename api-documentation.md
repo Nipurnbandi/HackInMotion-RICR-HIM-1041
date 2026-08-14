@@ -23,6 +23,7 @@ Base URL: `/api`. Authentication uses a JWT sent as an HTTP-only cookie (set on 
 | GET | `/citizen/issues/{id}` | One own report **with the full status history**, resolution note, and proof photo. Members of a case show the case's effective status and shared history. |
 | POST | `/citizen/issues/{id}/confirm` | Reporter confirms a **resolved** case is actually fixed (recorded in history). `400` if not resolved. |
 | POST | `/citizen/issues/{id}/reopen` | Reporter reopens a **resolved** case → status returns to `UNDER_REVIEW` for the whole case. `400` if not resolved. |
+| POST | `/citizen/issues/{id}/vote` | Toggle an upvote on any active case (target is the case's primary id from the map). Reporters of the case get `400` — their report already counts. Returns `{issue_id, vote_count, has_voted}`. |
 
 ## Admin
 
@@ -36,8 +37,16 @@ Base URL: `/api`. Authentication uses a JWT sent as an HTTP-only cookie (set on 
 | PUT | `/admin/issues/{id}` | Update `status`, `title`, `description`, and/or `resolution_note`. Status changes and notes are recorded in the status history. |
 | POST | `/admin/issues/{id}/resolution-photo` | Multipart upload of a proof-of-resolution photo (same validation as citizen photos); stored and linked in the history. |
 | DELETE | `/admin/issues/{id}` | Remove a report. |
-| GET | `/admin/notifications` | Department notification inbox with unread count and email delivery state. |
+| GET | `/admin/notifications` | Department notification inbox with unread count and email delivery state — includes SLA-breach escalation alerts. |
 | POST | `/admin/notifications/{id}/read` | Mark a notification as read. |
+
+Admin case rows include `vote_count`, `escalated`, and `sla_days`; the SLA sweep runs automatically on `/admin/dashboard`, `/admin/analytics`, and `/admin/issues`.
+
+## Public (no authentication)
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/public/transparency` | Live report card: per-department score (0–100) and grade (A+–D) from resolution rate (50%), resolved-within-SLA rate (30%), and speed vs a 14-day baseline (20%), plus a city-wide summary and the methodology text. |
 
 ## Statuses & categories
 

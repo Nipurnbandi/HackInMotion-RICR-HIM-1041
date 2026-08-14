@@ -80,7 +80,16 @@ class MapIssueResponse(BaseModel):
     created_at: datetime
     report_count: int
     citizen_count: int
+    vote_count: int = 0
+    has_voted: bool = False
+    escalated: bool = False
     department_name: str | None
+
+
+class VoteResponse(BaseModel):
+    issue_id: int
+    vote_count: int
+    has_voted: bool
 
 
 class IssueListResponse(BaseModel):

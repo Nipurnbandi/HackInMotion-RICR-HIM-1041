@@ -10,20 +10,22 @@ import {
   DESCRIPTION_MIN_LENGTH,
 } from "../../shared/constants";
 import { formatCoordinates } from "../services/geocoding";
+import { useI18n } from "../../shared/i18n";
 import { citizenService } from "../services/citizenService";
 
 const STEPS = [
-  { id: "category", title: "What is the problem?" },
-  { id: "location", title: "Where is the problem?" },
-  { id: "photo", title: "Add photo evidence" },
-  { id: "description", title: "Describe the problem" },
-  { id: "review", title: "Review & submit" },
+  { id: "category", key: "report.steps.category", title: "What is the problem?" },
+  { id: "location", key: "report.steps.location", title: "Where is the problem?" },
+  { id: "photo", key: "report.steps.photo", title: "Add photo evidence" },
+  { id: "description", key: "report.steps.description", title: "Describe the problem" },
+  { id: "review", key: "report.steps.review", title: "Review & submit" },
 ];
 
 const EMPTY_LOCATION = { latitude: null, longitude: null, address: null };
 
 export default function ReportIssue() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const headingRef = useRef(null);
 
   const [stepIndex, setStepIndex] = useState(0);
@@ -137,10 +139,12 @@ export default function ReportIssue() {
   return (
     <div className="page page--narrow">
       <div className="page-heading">
-        <h1>Report an issue</h1>
+        <h1>{t("report.title", "Report an issue")}</h1>
         <p className="muted">
-          Five short steps. Your report goes straight to the city administration with a
-          tracking ID.
+          {t(
+            "report.subtitle",
+            "Five short steps. Your report goes straight to the city administration with a tracking ID."
+          )}
         </p>
       </div>
 
@@ -160,7 +164,7 @@ export default function ReportIssue() {
                 <span className="stepper__index" aria-hidden="true">
                   {index < stepIndex ? "✓" : index + 1}
                 </span>
-                <span className="stepper__label">{item.title}</span>
+                <span className="stepper__label">{t(item.key, item.title)}</span>
               </button>
             </li>
           );
@@ -170,9 +174,10 @@ export default function ReportIssue() {
       <form className="card form-card" onSubmit={handleSubmit} noValidate>
         <h2 className="form-card__title" tabIndex={-1} ref={headingRef}>
           <span className="form-card__step">
-            Step {stepIndex + 1} of {STEPS.length}
+            {t("report.step", "Step")} {stepIndex + 1} {t("report.stepOf", "of")}{" "}
+            {STEPS.length}
           </span>
-          {step.title}
+          {t(step.key, step.title)}
         </h2>
 
         {step.id === "category" && (
@@ -209,10 +214,13 @@ export default function ReportIssue() {
         {step.id === "description" && (
           <div className="field">
             <label className="field__label" htmlFor="description">
-              Describe the problem
+              {t("report.describeLabel", "Describe the problem")}
             </label>
             <p className="field-hint" id="description-help">
-              What is wrong, how long has it been like this, and is anyone at risk?
+              {t(
+                "report.describeHint",
+                "What is wrong, how long has it been like this, and is anyone at risk?"
+              )}
             </p>
             <textarea
               id="description"
@@ -248,7 +256,7 @@ export default function ReportIssue() {
         {step.id === "review" && (
           <div className="review">
             <ReviewRow
-              label="Category"
+              label={t("report.review.category", "Category")}
               onEdit={() => goTo(0)}
               value={
                 selectedCategory ? (
@@ -262,7 +270,7 @@ export default function ReportIssue() {
               }
             />
             <ReviewRow
-              label="Location"
+              label={t("report.review.location", "Location")}
               onEdit={() => goTo(1)}
               value={
                 <>
@@ -276,19 +284,21 @@ export default function ReportIssue() {
               }
             />
             <ReviewRow
-              label="Photo evidence"
+              label={t("report.review.photo", "Photo evidence")}
               onEdit={() => goTo(2)}
-              value={photo ? photo.name : "No photo attached"}
+              value={photo ? photo.name : t("report.review.nophoto", "No photo attached")}
             />
             <ReviewRow
-              label="Description"
+              label={t("report.review.description", "Description")}
               onEdit={() => goTo(3)}
               value={<span className="review__description">{trimmedDescription}</span>}
             />
 
             <p className="review__note">
-              Your report will be filed under your account and given a tracking ID. City
-              staff review each report before work is scheduled.
+              {t(
+                "report.review.note",
+                "Your report will be filed under your account and given a tracking ID. City staff review each report before work is scheduled."
+              )}
             </p>
           </div>
         )}
@@ -317,11 +327,11 @@ export default function ReportIssue() {
               onClick={back}
               disabled={submitting}
             >
-              Back
+              {t("report.back", "Back")}
             </button>
           ) : (
             <Link to="/citizen" className="button button--secondary">
-              Cancel
+              {t("report.cancel", "Cancel")}
             </Link>
           )}
 
@@ -333,7 +343,9 @@ export default function ReportIssue() {
               onClick={handleSubmit}
               disabled={submitting}
             >
-              {submitting ? "Submitting…" : "Submit report"}
+              {submitting
+                ? t("report.submitting", "Submitting…")
+                : t("report.submit", "Submit report")}
             </button>
           ) : (
             <button
@@ -342,7 +354,7 @@ export default function ReportIssue() {
               className="button button--primary"
               onClick={next}
             >
-              Continue
+              {t("report.continue", "Continue")}
             </button>
           )}
         </div>
@@ -364,25 +376,28 @@ function ReviewRow({ label, value, onEdit }) {
 }
 
 function SuccessScreen({ issue }) {
+  const { t } = useI18n();
   return (
     <div className="page page--narrow">
       <div className="card success-card" role="status">
         <span className="success-card__icon" aria-hidden="true">
           ✓
         </span>
-        <h1>Issue reported successfully</h1>
+        <h1>{t("report.success.title", "Issue reported successfully")}</h1>
         <p className="muted">
-          Thank you for helping improve your city. Your report has been sent to the city
-          administration.
+          {t(
+            "report.success.message",
+            "Thank you for helping improve your city. Your report has been sent to the city administration."
+          )}
         </p>
 
         <dl className="success-card__details">
           <div>
-            <dt>Tracking ID</dt>
+            <dt>{t("report.success.tracking", "Tracking ID")}</dt>
             <dd className="success-card__tracking">{issue.tracking_id}</dd>
           </div>
           <div>
-            <dt>Status</dt>
+            <dt>{t("report.success.status", "Status")}</dt>
             <dd>
               <StatusBadge status={issue.status} />
             </dd>
@@ -390,16 +405,18 @@ function SuccessScreen({ issue }) {
         </dl>
 
         <p className="success-card__hint">
-          Keep this tracking ID. You can follow the progress of this report at any time
-          from My Reports.
+          {t(
+            "report.success.hint",
+            "Keep this tracking ID. You can follow the progress of this report at any time from My Reports."
+          )}
         </p>
 
         <div className="success-card__actions">
           <Link to="/citizen/issues" className="button button--primary">
-            View my reports
+            {t("report.success.viewall", "View my reports")}
           </Link>
           <Link to={`/citizen/issues/${issue.id}`} className="button button--secondary">
-            View this report
+            {t("report.success.viewthis", "View this report")}
           </Link>
         </div>
       </div>

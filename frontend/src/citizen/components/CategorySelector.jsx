@@ -1,6 +1,8 @@
 import { CATEGORIES } from "../../shared/constants";
+import { useI18n } from "../../shared/i18n";
 
 export default function CategorySelector({ value, onChange, error, describedBy }) {
+  const { t } = useI18n();
   const errorId = error ? "category-error" : undefined;
 
   return (
@@ -30,8 +32,12 @@ export default function CategorySelector({ value, onChange, error, describedBy }
                 {category.icon}
               </span>
               <span className="category-option__body">
-                <span className="category-option__label">{category.label}</span>
-                <span className="category-option__hint">{category.hint}</span>
+                <span className="category-option__label">
+                  {t(`category.${category.value}.label`, category.label)}
+                </span>
+                <span className="category-option__hint">
+                  {t(`category.${category.value}.hint`, category.hint)}
+                </span>
               </span>
               <span className="category-option__check" aria-hidden="true">
                 {selected ? "✓" : ""}

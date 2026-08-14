@@ -3,24 +3,26 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import IssueCard from "../components/IssueCard";
 import { EmptyState, ErrorState, LoadingState } from "../../shared/components/States";
+import { useI18n } from "../../shared/i18n";
 import { citizenService } from "../services/citizenService";
 
-function greeting(date = new Date()) {
+function greetingKey(date = new Date()) {
   const hour = date.getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return ["dashboard.greeting.morning", "Good morning"];
+  if (hour < 17) return ["dashboard.greeting.afternoon", "Good afternoon"];
+  return ["dashboard.greeting.evening", "Good evening"];
 }
 
 const STAT_CARDS = [
-  { key: "total", label: "Total reports", tone: "neutral" },
-  { key: "submitted", label: "Submitted", tone: "info" },
-  { key: "in_progress", label: "In progress", tone: "primary" },
-  { key: "resolved", label: "Resolved", tone: "success" },
+  { key: "total", i18nKey: "dashboard.stats.total", label: "Total reports", tone: "neutral" },
+  { key: "submitted", i18nKey: "dashboard.stats.submitted", label: "Submitted", tone: "info" },
+  { key: "in_progress", i18nKey: "dashboard.stats.inprogress", label: "In progress", tone: "primary" },
+  { key: "resolved", i18nKey: "dashboard.stats.resolved", label: "Resolved", tone: "success" },
 ];
 
 export default function CitizenDashboard() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,19 +49,23 @@ export default function CitizenDashboard() {
     <div className="page">
       <section className="hero">
         <div>
-          <p className="hero__eyebrow">{greeting()}</p>
+          <p className="hero__eyebrow">{t(...greetingKey())}</p>
           <h1 className="hero__title">{name}</h1>
           <p className="hero__subtitle">
-            Report a civic problem and help improve your city. Every report is given a
-            tracking ID so you can follow it through to resolution.
+            {t(
+              "dashboard.subtitle",
+              "Report a civic problem and help improve your city. Every report is given a tracking ID so you can follow it through to resolution."
+            )}
           </p>
         </div>
         <Link to="/citizen/report" className="button button--primary button--lg">
-          + Report an Issue
+          {t("common.reportIssue", "+ Report an Issue")}
         </Link>
       </section>
 
-      {loading && <LoadingState label="Loading your dashboard…" />}
+      {loading && (
+        <LoadingState label={t("dashboard.loading", "Loading your dashboard…")} />
+      )}
 
       {!loading && error && (
         <ErrorState
@@ -73,13 +79,15 @@ export default function CitizenDashboard() {
         <>
           <section aria-labelledby="stats-heading">
             <h2 className="section-title" id="stats-heading">
-              My reports
+              {t("dashboard.myreports", "My reports")}
             </h2>
             <ul className="stat-grid">
               {STAT_CARDS.map((card) => (
                 <li key={card.key} className={`stat-card stat-card--${card.tone}`}>
                   <span className="stat-card__value">{data.stats[card.key]}</span>
-                  <span className="stat-card__label">{card.label}</span>
+                  <span className="stat-card__label">
+                    {t(card.i18nKey, card.label)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -88,11 +96,11 @@ export default function CitizenDashboard() {
           <section aria-labelledby="recent-heading">
             <div className="section-header">
               <h2 className="section-title" id="recent-heading">
-                Recent reports
+                {t("dashboard.recent", "Recent reports")}
               </h2>
               {data.recent_issues.length > 0 && (
                 <Link to="/citizen/issues" className="link">
-                  View all reports
+                  {t("dashboard.viewall", "View all reports")}
                 </Link>
               )}
             </div>
@@ -100,11 +108,17 @@ export default function CitizenDashboard() {
             {data.recent_issues.length === 0 ? (
               <EmptyState
                 icon="📍"
-                title="You haven't reported anything yet"
-                message="Spotted a pothole, a broken streetlight, or an overflowing bin? Report it and the city will take a look."
+                title={t(
+                  "dashboard.empty.title",
+                  "You haven't reported anything yet"
+                )}
+                message={t(
+                  "dashboard.empty.message",
+                  "Spotted a pothole, a broken streetlight, or an overflowing bin? Report it and the city will take a look."
+                )}
                 action={
                   <Link to="/citizen/report" className="button button--primary">
-                    Report your first issue
+                    {t("dashboard.empty.cta", "Report your first issue")}
                   </Link>
                 }
               />
@@ -119,7 +133,7 @@ export default function CitizenDashboard() {
 
           <section className="info-panel" aria-labelledby="civic-info-heading">
             <h2 className="section-title" id="civic-info-heading">
-              Good to know
+              {t("dashboard.tips.title", "Good to know")}
             </h2>
             <ul className="info-list">
               <li>

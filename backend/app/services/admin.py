@@ -9,6 +9,7 @@ from app.core.issue_types import (
     CATEGORY_LABELS,
     CLOSED_STATUSES,
     SEVERITY_WEIGHTS,
+    SLA_DAYS,
     IssueStatus,
 )
 from app.core.roles import Role
@@ -17,10 +18,14 @@ from app.models import Department, Issue, User
 from app.schemas.admin import IssueUpdate
 from app.services.city_map import case_report_counts
 from app.services.lifecycle import record_status_change
+from app.services.votes import vote_counts
 
 HOTSPOT_CELL_PRECISION = 3  # ~110m grid cells
 HOTSPOT_MIN_REPORTS = 2
 HOTSPOT_LIMIT = 8
+
+# An SLA-breached case outranks everything of comparable size in the queue.
+ESCALATION_PRIORITY_BOOST = 1.5
 
 
 def get_admin_dashboard(db: Session, user: User) -> dict:
@@ -192,6 +197,7 @@ def list_admin_cases(db: Session, *, department_code: str | None = None) -> list
         ).where(Department.code == department_code)
 
     rows = db.execute(query).all()
+    votes = vote_counts(db)
 
     now = datetime.now(timezone.utc)
     cases = []
@@ -201,15 +207,24 @@ def list_admin_cases(db: Session, *, department_code: str | None = None) -> list
             created = created.replace(tzinfo=timezone.utc)
         days_open = max((now - created).days, 0)
 
-        priority = round(
-            SEVERITY_WEIGHTS[issue.category] * citizen_count * (1 + days_open / 7), 1
+        vote_count = votes.get(issue.id, 0)
+        people_affected = citizen_count + vote_count
+        escalated = issue.escalated_at is not None
+
+        priority = (
+            SEVERITY_WEIGHTS[issue.category] * people_affected * (1 + days_open / 7)
         )
+        if escalated:
+            priority *= ESCALATION_PRIORITY_BOOST
         cases.append(
             {
                 "issue": issue,
                 "citizen_count": citizen_count,
+                "vote_count": vote_count,
                 "days_open": days_open,
-                "priority_score": priority,
+                "priority_score": round(priority, 1),
+                "escalated": escalated,
+                "sla_days": SLA_DAYS[issue.category],
                 "department_code": issue.department.code if issue.department else None,
                 "department_name": issue.department.name if issue.department else None,
             }

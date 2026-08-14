@@ -61,6 +61,9 @@ export default function Login() {
         <p className="auth-link">
           No account? <Link to="/signup">Sign up</Link>
         </p>
+        <p className="auth-link">
+          📊 <Link to="/transparency">See how your city is performing</Link>
+        </p>
       </div>
     </div>
   );

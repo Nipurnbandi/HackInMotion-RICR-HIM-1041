@@ -59,6 +59,19 @@ SEVERITY_WEIGHTS: dict[IssueCategory, int] = {
     IssueCategory.ILLEGAL_DUMPING: 2,
 }
 
+# Service-level agreement: days a case may stay open before it escalates
+# to higher authority. Urgent utilities get tight limits; structural work
+# gets more room.
+SLA_DAYS: dict[IssueCategory, int] = {
+    IssueCategory.GARBAGE_OVERFLOW: 2,
+    IssueCategory.WATER_LEAKAGE: 3,
+    IssueCategory.ILLEGAL_DUMPING: 4,
+    IssueCategory.BROKEN_DRAINAGE: 5,
+    IssueCategory.POTHOLE: 7,
+    IssueCategory.STREETLIGHT: 7,
+    IssueCategory.DAMAGED_PUBLIC_PROPERTY: 10,
+}
+
 CLOSED_STATUSES: tuple[IssueStatus, ...] = (IssueStatus.RESOLVED, IssueStatus.REJECTED)
 
 STATUS_FLOW: tuple[IssueStatus, ...] = (

@@ -395,7 +395,17 @@ export default function AdminDashboard() {
                               </span>
 
                               <span className="issue-card__aside">
-                                <StatusBadge status={item.status} size="sm" />
+                                <span className="badge-row">
+                                  <StatusBadge status={item.status} size="sm" />
+                                  {item.escalated && (
+                                    <span
+                                      className="escalated-badge"
+                                      title={`Unresolved beyond the ${item.sla_days}-day SLA — escalated to higher authority`}
+                                    >
+                                      ⚠ SLA breached
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="status-control">
                                   <label
                                     className="visually-hidden"
@@ -436,6 +446,12 @@ export default function AdminDashboard() {
                                   👥 {item.citizen_count}{" "}
                                   {item.citizen_count === 1 ? "citizen" : "citizens"}
                                 </span>
+                                {item.vote_count > 0 && (
+                                  <span className="case-meta case-meta__votes">
+                                    👍 {item.vote_count}{" "}
+                                    {item.vote_count === 1 ? "supporter" : "supporters"}
+                                  </span>
+                                )}
                                 <span className="case-meta case-meta--muted">
                                   {item.days_open === 0
                                     ? "reported today"

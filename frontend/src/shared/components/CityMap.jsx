@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import StatusBadge from "./StatusBadge";
+import { useI18n } from "../i18n";
 import {
   CATEGORIES,
   CLOSED_STATUSES,
@@ -76,9 +77,11 @@ export default function CityMap({
   issues,
   colorMode = "status",
   onColorModeChange,
+  onVote,
   theme = "light",
   label = "Live city map",
 }) {
+  const { t } = useI18n();
   const tileUrl = theme === "dark" ? DARK_TILE_URL : LIGHT_TILE_URL;
   const tileAttribution =
     theme === "dark" ? DARK_TILE_ATTRIBUTION : LIGHT_TILE_ATTRIBUTION;
@@ -87,34 +90,40 @@ export default function CityMap({
     if (colorMode === "category") {
       return CATEGORIES.map((category) => ({
         key: category.value,
-        label: `${category.icon} ${category.label}`,
+        label: `${category.icon} ${t(
+          `category.${category.value}.label`,
+          category.label
+        )}`,
         color: categoryColor(category.value),
         count: issues.filter((issue) => issue.category === category.value).length,
       })).filter((entry) => entry.count > 0);
     }
     return STATUSES.map((status) => ({
       key: status.value,
-      label: status.label,
+      label: t(`status.${status.value}.label`, status.label),
       color: statusColor(status.value),
       count: issues.filter((issue) => issue.status === status.value).length,
     })).filter((entry) => entry.count > 0);
-  }, [issues, colorMode]);
+  }, [issues, colorMode, t]);
 
   return (
     <section className={`city-map city-map--${theme}`} aria-label={label}>
       <div className="city-map__toolbar">
         <span className="city-map__summary">
-          📍 {issues.length} {issues.length === 1 ? "issue" : "issues"} on the map
+          📍 {issues.length}{" "}
+          {issues.length === 1
+            ? t("map.issueOnMap", "issue on the map")
+            : t("map.issuesOnMap", "issues on the map")}
         </span>
         <div className="city-map__modes" role="group" aria-label="Color markers by">
-          <span className="city-map__modes-label">Color by</span>
+          <span className="city-map__modes-label">{t("map.colorby", "Color by")}</span>
           <button
             type="button"
             className={`chip chip--sm${colorMode === "status" ? " chip--active" : ""}`}
             aria-pressed={colorMode === "status"}
             onClick={() => onColorModeChange?.("status")}
           >
-            Status
+            {t("map.status", "Status")}
           </button>
           <button
             type="button"
@@ -122,7 +131,7 @@ export default function CityMap({
             aria-pressed={colorMode === "category"}
             onClick={() => onColorModeChange?.("category")}
           >
-            Category
+            {t("map.category", "Category")}
           </button>
         </div>
       </div>
@@ -145,21 +154,54 @@ export default function CityMap({
               <Popup>
                 <div className="map-popup">
                   <span className="map-popup__title">
-                    {categoryIcon(issue.category)} {categoryLabel(issue.category)}
+                    {categoryIcon(issue.category)}{" "}
+                    {t(
+                      `category.${issue.category}.label`,
+                      categoryLabel(issue.category)
+                    )}
                   </span>
-                  <StatusBadge status={issue.status} size="sm" />
+                  <span className="map-popup__badges">
+                    <StatusBadge status={issue.status} size="sm" />
+                    {issue.escalated && (
+                      <span className="escalated-badge">
+                        ⚠ {t("map.escalated", "Escalated")}
+                      </span>
+                    )}
+                  </span>
                   {issue.address && (
                     <span className="map-popup__address">{issue.address}</span>
                   )}
                   <span className="map-popup__meta">
                     {issue.report_count}{" "}
-                    {issue.report_count === 1 ? "report" : "reports"}
+                    {issue.report_count === 1
+                      ? t("map.report", "report")
+                      : t("map.reports", "reports")}
                     {issue.department_name ? ` · ${issue.department_name}` : ""}
                   </span>
                   <span className="map-popup__meta">
                     {issue.tracking_id ? `${issue.tracking_id} · ` : ""}
                     {formatDate(issue.created_at)}
                   </span>
+                  {onVote ? (
+                    <button
+                      type="button"
+                      className={`vote-button${issue.has_voted ? " vote-button--active" : ""}`}
+                      onClick={() => onVote(issue)}
+                    >
+                      👍{" "}
+                      {issue.has_voted
+                        ? t("map.supported", "Supported")
+                        : t("map.support", "Support")}{" "}
+                      · {issue.vote_count ?? 0}
+                    </button>
+                  ) : (
+                    (issue.vote_count ?? 0) > 0 && (
+                      <span className="map-popup__meta">
+                        👍 {issue.vote_count}{" "}
+                        {t("map.supporters", "citizens support this")}
+                      </span>
+                    )
+                  )}
                 </div>
               </Popup>
             </Marker>

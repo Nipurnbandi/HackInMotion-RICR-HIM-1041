@@ -24,6 +24,15 @@ Two purpose-built interfaces share one backend:
 | 9 | Responsive, clean UI | Mobile-first CSS, responsive breakpoints across both portals |
 | 10 | Error handling | GPS denial fallback, photo validation (type/size/magic bytes), geocoding failure fallback to coordinates, network error states with retry everywhere |
 
+### Beyond the brief
+
+| Feature | How it works |
+|---|---|
+| **SLA-based escalation** | Every category has an SLA (2 days for garbage overflow … 10 for damaged property, `app/core/issue_types.py`). An idempotent sweep runs on every admin load: open cases past their deadline are flagged, logged in their status history, boosted ×1.5 in the priority queue with an "⚠ SLA breached" badge, and the higher authority (General Administration) gets a notification. |
+| **Citizen upvoting** | Citizens support existing problems straight from the city map popups (`POST /citizen/issues/{id}/vote`, toggleable). Reporters of a case can't double-dip — their report already counts. Votes add to the "people affected" factor of the priority score, so high-impact problems rise in the department queues. |
+| **Public transparency score** | `GET /api/public/transparency` — **no login required** — computes a 0–100 score and A+–D grade per department: 50% resolution rate + 30% resolved-within-SLA + 20% speed vs a 14-day baseline. Rendered at `/transparency` as a public report card, linked from the login page and the citizen footer. |
+| **Multi-language reporting** | A language switcher (🌐) in the citizen portal flips the entire reporting experience — navigation, category names and hints, the 5-step wizard, statuses, timeline, and lifecycle updates — between English and हिन्दी, persisted per device. Free-text reports accept any script; adding another regional language is one dictionary in `frontend/src/shared/i18n.jsx`. |
+
 ---
 
 ## Maps & Geolocation API

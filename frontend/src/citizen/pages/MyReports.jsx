@@ -2,19 +2,21 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import IssueCard from "../components/IssueCard";
 import { EmptyState, ErrorState, LoadingState } from "../../shared/components/States";
+import { useI18n } from "../../shared/i18n";
 import { citizenService } from "../services/citizenService";
 
 const FILTERS = [
-  { value: "", label: "All" },
-  { value: "SUBMITTED", label: "Submitted" },
-  { value: "UNDER_REVIEW", label: "Under Review" },
-  { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "RESOLVED", label: "Resolved" },
+  { value: "", key: "myreports.all", label: "All" },
+  { value: "SUBMITTED", key: "status.SUBMITTED.label", label: "Submitted" },
+  { value: "UNDER_REVIEW", key: "status.UNDER_REVIEW.label", label: "Under Review" },
+  { value: "IN_PROGRESS", key: "status.IN_PROGRESS.label", label: "In Progress" },
+  { value: "RESOLVED", key: "status.RESOLVED.label", label: "Resolved" },
 ];
 
 const PAGE_SIZE = 10;
 
 export default function MyReports() {
+  const { t } = useI18n();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -62,11 +64,13 @@ export default function MyReports() {
     <div className="page">
       <div className="page-heading page-heading--row">
         <div>
-          <h1>My reports</h1>
-          <p className="muted">Everything you have reported, and where it stands.</p>
+          <h1>{t("myreports.title", "My reports")}</h1>
+          <p className="muted">
+            {t("myreports.subtitle", "Everything you have reported, and where it stands.")}
+          </p>
         </div>
         <Link to="/citizen/report" className="button button--primary">
-          + Report an Issue
+          {t("common.reportIssue", "+ Report an Issue")}
         </Link>
       </div>
 
@@ -82,7 +86,10 @@ export default function MyReports() {
             id="report-search"
             type="search"
             className="input"
-            placeholder="Search by description, address, or tracking ID…"
+            placeholder={t(
+              "myreports.search",
+              "Search by description, address, or tracking ID…"
+            )}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -100,13 +107,15 @@ export default function MyReports() {
                 setPage(1);
               }}
             >
-              {filter.label}
+              {t(filter.key, filter.label)}
             </button>
           ))}
         </div>
       </div>
 
-      {loading && <LoadingState label="Loading your reports…" />}
+      {loading && (
+        <LoadingState label={t("myreports.loading", "Loading your reports…")} />
+      )}
 
       {!loading && error && (
         <ErrorState title="We couldn't load your reports" message={error} onRetry={load} />
@@ -146,7 +155,10 @@ export default function MyReports() {
       {!loading && !error && data && data.items.length > 0 && (
         <>
           <p className="results-count" aria-live="polite">
-            {data.total} {data.total === 1 ? "report" : "reports"}
+            {data.total}{" "}
+            {data.total === 1
+              ? t("myreports.report", "report")
+              : t("myreports.reports", "reports")}
           </p>
 
           <ul className="issue-list">
@@ -163,10 +175,11 @@ export default function MyReports() {
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={page <= 1}
               >
-                Previous
+                {t("myreports.prev", "Previous")}
               </button>
               <span className="pagination__status">
-                Page {page} of {totalPages}
+                {t("myreports.page", "Page")} {page} {t("myreports.of", "of")}{" "}
+                {totalPages}
               </span>
               <button
                 type="button"
@@ -174,7 +187,7 @@ export default function MyReports() {
                 onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                 disabled={page >= totalPages}
               >
-                Next
+                {t("myreports.next", "Next")}
               </button>
             </nav>
           )}
