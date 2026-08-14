@@ -58,6 +58,8 @@ function buildQuery(params) {
 export const citizenService = {
   getDashboard: () => request("/citizen/dashboard"),
 
+  getCityMap: () => request("/citizen/map"),
+
   getStats: () => request("/citizen/issues/stats"),
 
   listIssues: ({ status, search, page = 1, pageSize = 20 } = {}) =>

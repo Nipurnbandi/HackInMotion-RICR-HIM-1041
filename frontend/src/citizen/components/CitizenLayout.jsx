@@ -6,6 +6,7 @@ import "../../styles/citizen.css";
 
 const NAV_ITEMS = [
   { to: "/citizen", label: "Home", end: true },
+  { to: "/citizen/map", label: "City Map" },
   { to: "/citizen/report", label: "Report" },
   { to: "/citizen/issues", label: "My Reports" },
   { to: "/citizen/help", label: "Help" },

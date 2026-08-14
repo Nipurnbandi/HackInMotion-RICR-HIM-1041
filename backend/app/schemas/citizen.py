@@ -50,6 +50,20 @@ class IssueResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MapIssueResponse(BaseModel):
+    id: int
+    tracking_id: str | None
+    category: IssueCategory
+    status: IssueStatus
+    latitude: float
+    longitude: float
+    address: str | None
+    created_at: datetime
+    report_count: int
+    citizen_count: int
+    department_name: str | None
+
+
 class IssueListResponse(BaseModel):
     items: list[IssueResponse]
     total: int

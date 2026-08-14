@@ -62,15 +62,18 @@ def send_pending_notifications() -> None:
         db.close()
 
 
-def list_notifications(db: Session, *, limit: int = 50) -> tuple[list[Notification], int]:
-    items = (
-        db.query(Notification)
+def list_notifications(
+    db: Session, *, limit: int = 50
+) -> tuple[list[tuple[Notification, Department]], int]:
+    rows = (
+        db.query(Notification, Department)
+        .join(Department, Notification.department_id == Department.id)
         .order_by(Notification.created_at.desc(), Notification.id.desc())
         .limit(limit)
         .all()
     )
     unread = db.query(Notification).filter(Notification.is_read.is_(False)).count()
-    return items, unread
+    return rows, unread
 
 
 def mark_notification_read(db: Session, notification_id: int) -> Notification:

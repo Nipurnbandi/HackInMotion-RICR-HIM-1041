@@ -32,6 +32,10 @@ async function request(path, options = {}) {
 export const adminService = {
   getDashboard: () => request("/admin/dashboard"),
 
+  getAnalytics: () => request("/admin/analytics"),
+
+  getMapIssues: () => request("/admin/map"),
+
   getDepartments: () => request("/admin/departments"),
 
   listCases: (department) =>
@@ -41,4 +45,11 @@ export const adminService = {
 
   markNotificationRead: (id) =>
     request(`/admin/notifications/${id}/read`, { method: "POST" }),
+
+  updateStatus: (issueId, status) =>
+    request(`/admin/issues/${issueId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }),
 };

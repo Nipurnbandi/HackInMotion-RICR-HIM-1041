@@ -5,6 +5,7 @@ import Signup from "./auth/Signup";
 import AdminDashboard from "./admin/pages/AdminDashboard";
 import CitizenLayout from "./citizen/components/CitizenLayout";
 import CitizenDashboard from "./citizen/pages/CitizenDashboard";
+import CityMapPage from "./citizen/pages/CityMapPage";
 import Help from "./citizen/pages/Help";
 import IssueDetails from "./citizen/pages/IssueDetails";
 import MyReports from "./citizen/pages/MyReports";
@@ -46,6 +47,7 @@ export default function App() {
               }
             >
               <Route index element={<CitizenDashboard />} />
+              <Route path="map" element={<CityMapPage />} />
               <Route path="report" element={<ReportIssue />} />
               <Route path="issues" element={<MyReports />} />
               <Route path="issues/:issueId" element={<IssueDetails />} />

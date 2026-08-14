@@ -26,6 +26,7 @@ from app.schemas.citizen import (
     IssueListResponse,
     IssueResponse,
     IssueStats,
+    MapIssueResponse,
 )
 from app.services.citizen import (
     create_citizen_issue,
@@ -37,6 +38,7 @@ from app.services.citizen import (
     list_citizen_issues,
     validate_photo,
 )
+from app.services.city_map import list_map_issues
 from app.services.notification import notify_new_case, send_pending_notifications
 
 router = APIRouter(prefix="/citizen", tags=["citizen"])
@@ -78,6 +80,14 @@ def citizen_dashboard(
     db: Session = Depends(get_db),
 ):
     return get_citizen_dashboard(db, current_user)
+
+
+@router.get("/map", response_model=list[MapIssueResponse])
+def citizen_city_map(
+    _: User = Depends(citizen_only),
+    db: Session = Depends(get_db),
+):
+    return list_map_issues(db)
 
 
 @router.get("/issues/stats", response_model=IssueStats)

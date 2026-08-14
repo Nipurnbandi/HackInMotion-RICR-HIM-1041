@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import require_roles
 from app.core.roles import Role
-from app.models import User
+from app.models import Department, Notification, User
 from app.schemas.admin import (
     AdminAnalyticsResponse,
     AdminCaseResponse,
@@ -17,6 +17,7 @@ from app.schemas.admin import (
     NotificationListResponse,
     NotificationResponse,
 )
+from app.schemas.citizen import MapIssueResponse
 from app.services.admin import (
     delete_issue,
     get_admin_analytics,
@@ -25,6 +26,7 @@ from app.services.admin import (
     list_departments,
     update_issue,
 )
+from app.services.city_map import list_map_issues
 from app.services.notification import list_notifications, mark_notification_read
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -61,6 +63,14 @@ def admin_analytics(
     return get_admin_analytics(db)
 
 
+@router.get("/map", response_model=list[MapIssueResponse])
+def admin_map_issues(
+    _: User = Depends(admin_only),
+    db: Session = Depends(get_db),
+):
+    return list_map_issues(db)
+
+
 @router.get("/departments", response_model=list[DepartmentResponse])
 def admin_list_departments(
     _: User = Depends(admin_only),
@@ -81,14 +91,31 @@ def admin_list_issues(
     ]
 
 
+def notification_response(
+    notification: Notification, department: Department
+) -> NotificationResponse:
+    return NotificationResponse(
+        id=notification.id,
+        message=notification.message,
+        is_read=notification.is_read,
+        sent_at=notification.sent_at,
+        created_at=notification.created_at,
+        department_name=department.name,
+        department_email=department.email,
+    )
+
+
 @router.get("/notifications", response_model=NotificationListResponse)
 def admin_notifications(
     _: User = Depends(admin_only),
     db: Session = Depends(get_db),
 ):
-    items, unread = list_notifications(db)
+    rows, unread = list_notifications(db)
     return NotificationListResponse(
-        items=[NotificationResponse.model_validate(item) for item in items],
+        items=[
+            notification_response(notification, department)
+            for notification, department in rows
+        ],
         unread=unread,
     )
 
@@ -99,7 +126,9 @@ def admin_mark_notification_read(
     _: User = Depends(admin_only),
     db: Session = Depends(get_db),
 ):
-    return mark_notification_read(db, notification_id)
+    notification = mark_notification_read(db, notification_id)
+    department = db.get(Department, notification.department_id)
+    return notification_response(notification, department)
 
 
 @router.put("/issues/{issue_id}", response_model=AdminIssueResponse)

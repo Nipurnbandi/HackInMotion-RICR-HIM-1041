@@ -1,3 +1,238 @@
+/* ============================================================
+   Admin dark theme — "command center"
+   Scoped token override: everything inside .admin-dark re-reads
+   the shared components (cards, chips, badges…) in dark. The
+   citizen portal keeps the light tokens untouched.
+   ============================================================ */
+
+.admin-dark {
+  color-scheme: dark;
+
+  --color-bg: #060913;
+  --color-surface: rgba(20, 26, 51, 0.66);
+  --color-surface-muted: rgba(30, 38, 74, 0.55);
+  --color-border: rgba(151, 168, 255, 0.14);
+  --color-border-strong: rgba(151, 168, 255, 0.32);
+
+  --color-text: #e7ecff;
+  --color-text-muted: #9fa8d6;
+  --color-text-subtle: #7480b0;
+
+  --color-primary: #5b7bff;
+  --color-primary-hover: #7c9aff;
+  --color-primary-soft: rgba(124, 154, 255, 0.16);
+  --color-primary-text: #b9c6ff;
+
+  --color-danger: #ff7b72;
+  --color-danger-soft: rgba(255, 123, 114, 0.14);
+  --color-success: #34d399;
+  --color-success-soft: rgba(52, 211, 153, 0.14);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgba(251, 191, 36, 0.14);
+  --color-info: #4cc9f0;
+  --color-info-soft: rgba(76, 201, 240, 0.14);
+  --color-neutral: #9aa5cb;
+  --color-neutral-soft: rgba(154, 165, 203, 0.14);
+
+  --shadow-sm: 0 1px 2px rgba(2, 4, 12, 0.5);
+  --shadow-md: 0 8px 24px rgba(2, 4, 12, 0.55);
+  --shadow-lg: 0 16px 48px rgba(2, 4, 12, 0.65);
+
+  --glow-primary: 0 0 24px rgba(91, 123, 255, 0.25);
+
+  scrollbar-color: rgba(124, 154, 255, 0.35) rgba(10, 14, 32, 0.6);
+}
+
+/* Aurora backdrop — fixed, behind everything */
+.admin-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 38% at 12% 8%, rgba(79, 70, 229, 0.28), transparent 70%),
+    radial-gradient(36% 34% at 88% 12%, rgba(6, 182, 212, 0.2), transparent 70%),
+    radial-gradient(46% 42% at 78% 92%, rgba(217, 70, 239, 0.14), transparent 70%),
+    radial-gradient(30% 30% at 25% 85%, rgba(59, 130, 246, 0.16), transparent 70%);
+  filter: saturate(120%);
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.5%, 1.5%, 0) scale(1.06);
+  }
+}
+
+/* The page canvas behind the app must go dark too, or it peeks through
+   on overscroll. Keeps the citizen portal untouched. */
+:root:has(.admin-dark) {
+  color-scheme: dark;
+  background: #060913;
+}
+
+.admin-dark .citizen-main {
+  position: relative;
+  z-index: 1;
+}
+
+/* Glass header — stays sticky (citizen.css), only restyled here */
+.admin-dark .citizen-header {
+  background: rgba(8, 12, 28, 0.72);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-dark .brand__text {
+  background: linear-gradient(100deg, #e7ecff, #9db4ff 55%, #6ee7f5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.admin-dark .brand__sub {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--color-text-muted);
+}
+
+/* Headline with a neon gradient sweep */
+.admin-dark .page-heading h1 {
+  font-size: 1.9rem;
+  background: linear-gradient(95deg, #ffffff 10%, #a5b8ff 55%, #67e8f9 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  width: fit-content;
+}
+
+/* Glass cards everywhere */
+.admin-dark .card,
+.admin-dark .stat-card,
+.admin-dark .state {
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0) 45%),
+    var(--color-surface);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--color-border);
+}
+
+.admin-dark .stat-card {
+  border-left-width: 4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-dark .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), var(--glow-primary);
+  border-color: var(--color-border-strong);
+}
+
+.admin-dark .stat-card__value {
+  background: linear-gradient(120deg, #ffffff, #b6c6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.admin-dark .issue-card__link {
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 50%),
+    var(--color-surface);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.admin-dark .issue-card__link:hover {
+  border-color: rgba(124, 154, 255, 0.45);
+  box-shadow: var(--shadow-md), var(--glow-primary);
+  transform: translateY(-1px);
+}
+
+.admin-dark .issue-card__icon {
+  background: rgba(124, 154, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(151, 168, 255, 0.16);
+}
+
+.admin-dark .chip {
+  background: rgba(16, 22, 46, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.admin-dark .chip:hover {
+  border-color: var(--color-primary-hover);
+}
+
+.admin-dark .chip--active {
+  background: linear-gradient(120deg, #4f6bff, #06b6d4);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: var(--glow-primary);
+}
+
+.admin-dark .spinner {
+  border-color: rgba(127, 143, 205, 0.25);
+  border-top-color: var(--color-primary);
+}
+
+/* ============================================================
+   View switcher tabs
+   ============================================================ */
+
+.admin-tabs {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: rgba(12, 17, 38, 0.72);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.2s ease;
+}
+
+.admin-tab:hover {
+  color: var(--color-text);
+  background: rgba(124, 154, 255, 0.1);
+}
+
+.admin-tab--active {
+  background: linear-gradient(120deg, #4f6bff, #0ea5c4);
+  color: #ffffff;
+  box-shadow: var(--glow-primary);
+}
+
+/* ============================================================
+   Notifications / queue (pre-existing pieces, dark-tuned)
+   ============================================================ */
+
 .admin-account {
   display: flex;
   align-items: center;
@@ -13,6 +248,13 @@
   padding: 0.4rem 0.6rem;
   font-size: 1rem;
   cursor: pointer;
+  color: var(--color-text);
+  transition: border-color 0.15s ease, box-shadow 0.2s ease;
+}
+
+.admin-dark .notif-bell:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--glow-primary);
 }
 
 .notif-bell__count {
@@ -29,6 +271,11 @@
   display: grid;
   place-items: center;
   padding: 0 0.25rem;
+}
+
+.admin-dark .notif-bell__count {
+  background: #ff4d6d;
+  box-shadow: 0 0 10px rgba(255, 77, 109, 0.65);
 }
 
 .notif-panel {
@@ -53,6 +300,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  color: inherit;
 }
 
 .notif-item--unread {
@@ -68,6 +316,18 @@
 .notif-item__meta {
   font-size: var(--font-xs);
   color: var(--color-text-muted);
+}
+
+.status-select {
+  font: inherit;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
 }
 
 .dept-badge {
@@ -110,11 +370,13 @@
 .priority-badge--high {
   background: var(--color-danger-soft);
   color: var(--color-danger);
+  box-shadow: inset 0 0 0 1px rgba(255, 123, 114, 0.35), 0 0 14px rgba(255, 123, 114, 0.18);
 }
 
 .priority-badge--medium {
   background: var(--color-warning-soft);
   color: var(--color-warning);
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.3);
 }
 
 .priority-badge--low {
@@ -134,4 +396,370 @@
 
 .stat-card--neutral {
   border-left-color: var(--color-neutral);
+}
+
+/* ============================================================
+   Analytics
+   ============================================================ */
+
+.analytics {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.stat-grid--analytics {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.analytics__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.chart-card__title {
+  font-size: 1rem;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.chart-card__hint {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--color-text-subtle);
+}
+
+.chart-card--wide {
+  grid-column: 1 / -1;
+}
+
+/* Donut */
+.donut {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.donut__svg {
+  width: 168px;
+  height: 168px;
+  flex-shrink: 0;
+}
+
+.donut__track {
+  stroke: rgba(127, 143, 205, 0.14);
+}
+
+.donut__value {
+  font-size: 1.7rem;
+  font-weight: 700;
+  fill: var(--color-text);
+}
+
+.donut__caption {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: var(--color-text-muted);
+}
+
+.donut__legend {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 180px;
+  flex: 1;
+}
+
+.donut__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-sm);
+}
+
+.donut__legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.donut__legend-label {
+  flex: 1;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.donut__legend-count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.donut__legend-count small {
+  color: var(--color-text-subtle);
+  font-weight: 500;
+}
+
+/* Horizontal bar list */
+.barlist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.barlist__row {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) 1fr 2.5rem;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.barlist__label {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barlist__track {
+  height: 10px;
+  border-radius: 0 4px 4px 0;
+  background: rgba(127, 143, 205, 0.12);
+  overflow: hidden;
+}
+
+.barlist__fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+  transition: width 0.4s ease;
+}
+
+.barlist__value {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Department performance table */
+.dept-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.dept-table th,
+.dept-table td {
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.dept-table thead th {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-subtle);
+}
+
+.dept-table tbody th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dept-table tbody tr:last-child th,
+.dept-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dept-table__num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dept-table__track {
+  display: block;
+  width: 100%;
+  min-width: 90px;
+  height: 10px;
+  border-radius: 0 4px 4px 0;
+  background: rgba(127, 143, 205, 0.12);
+  overflow: hidden;
+}
+
+.dept-table__fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(90deg, #4f6bff, #06b6d4);
+}
+
+/* Hotspots */
+.hotspot-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0;
+}
+
+.hotspot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.hotspot__rank {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: linear-gradient(135deg, #f43f5e, #f97316);
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.35);
+}
+
+.hotspot:nth-child(n + 4) .hotspot__rank {
+  background: linear-gradient(135deg, #4f6bff, #06b6d4);
+  box-shadow: none;
+}
+
+.hotspot__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.hotspot__place {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hotspot__meta {
+  font-size: var(--font-xs);
+  color: var(--color-text-muted);
+}
+
+.hotspot__count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.hotspot__count small {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+/* ============================================================
+   Map — dark flavour
+   ============================================================ */
+
+.admin-dark .city-map__frame {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md), 0 0 32px rgba(79, 70, 229, 0.18);
+}
+
+.city-map--dark .map-pin {
+  background: rgba(9, 13, 31, 0.92);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.55),
+    0 0 12px color-mix(in srgb, var(--pin-color, #3987e5) 55%, transparent);
+}
+
+.admin-dark .leaflet-container {
+  background: #0b0f22;
+  font: inherit;
+}
+
+.admin-dark .leaflet-popup-content-wrapper,
+.admin-dark .leaflet-popup-tip {
+  background: rgba(16, 22, 46, 0.95);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-dark .leaflet-popup-content-wrapper {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.admin-dark .map-popup__address,
+.admin-dark .map-popup__meta {
+  color: var(--color-text-muted);
+}
+
+.admin-dark .leaflet-bar a {
+  background: rgba(16, 22, 46, 0.95);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.admin-dark .leaflet-bar a:hover {
+  background: rgba(30, 38, 74, 0.95);
+}
+
+.admin-dark .leaflet-control-attribution {
+  background: rgba(8, 12, 28, 0.75);
+  color: var(--color-text-subtle);
+}
+
+.admin-dark .leaflet-control-attribution a {
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 640px) {
+  .admin-tabs {
+    width: 100%;
+  }
+
+  .admin-tab {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .donut {
+    justify-content: center;
+  }
+
+  .barlist__row {
+    grid-template-columns: minmax(110px, 150px) 1fr 2.2rem;
+  }
 }

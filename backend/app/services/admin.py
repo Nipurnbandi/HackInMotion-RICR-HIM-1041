@@ -1,13 +1,24 @@
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, func, select
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session, aliased, joinedload
 
-from app.core.issue_types import CLOSED_STATUSES, SEVERITY_WEIGHTS
+from app.core.issue_types import (
+    CATEGORY_LABELS,
+    CLOSED_STATUSES,
+    SEVERITY_WEIGHTS,
+    IssueStatus,
+)
 from app.core.roles import Role
 from app.models import Department, Issue, User
 from app.schemas.admin import IssueUpdate
+from app.services.city_map import case_report_counts
+
+HOTSPOT_CELL_PRECISION = 3  # ~110m grid cells
+HOTSPOT_MIN_REPORTS = 2
+HOTSPOT_LIMIT = 8
 
 
 def get_admin_dashboard(db: Session, user: User) -> dict:
@@ -21,17 +32,145 @@ def get_admin_dashboard(db: Session, user: User) -> dict:
     }
 
 
-def get_admin_analytics(db: Session) -> dict:
-    primaries = db.query(Issue).filter(Issue.is_primary.is_(True))
-    total_issues = primaries.count()
-    open_issues = primaries.filter(Issue.status.notin_(CLOSED_STATUSES)).count()
-    closed_issues = primaries.filter(Issue.status.in_(CLOSED_STATUSES)).count()
-    total_citizens = db.query(User).filter(User.role == Role.CITIZEN).count()
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
+def _resolution_days(issue: Issue) -> float:
+    delta = _as_utc(issue.updated_at) - _as_utc(issue.created_at)
+    return max(delta.total_seconds() / 86400, 0.0)
+
+
+def _average_resolution_days(issues: list[Issue]) -> float | None:
+    resolved = [issue for issue in issues if issue.status == IssueStatus.RESOLVED]
+    if not resolved:
+        return None
+    return round(sum(_resolution_days(issue) for issue in resolved) / len(resolved), 1)
+
+
+def _department_stats(code: str | None, name: str, issues: list[Issue]) -> dict:
     return {
-        "total_issues": total_issues,
+        "code": code,
+        "name": name,
+        "total_cases": len(issues),
+        "open_cases": sum(
+            1 for issue in issues if issue.status not in CLOSED_STATUSES
+        ),
+        "resolved_cases": sum(
+            1 for issue in issues if issue.status == IssueStatus.RESOLVED
+        ),
+        "avg_resolution_days": _average_resolution_days(issues),
+    }
+
+
+def _find_hotspots(
+    primaries: list[Issue], case_counts: dict[str | None, tuple[int, int]]
+) -> list[dict]:
+    cells: dict[tuple[float, float], list[Issue]] = defaultdict(list)
+    for issue in primaries:
+        if issue.latitude is None or issue.longitude is None:
+            continue
+        cells[
+            (
+                round(issue.latitude, HOTSPOT_CELL_PRECISION),
+                round(issue.longitude, HOTSPOT_CELL_PRECISION),
+            )
+        ].append(issue)
+
+    hotspots = []
+    for (latitude, longitude), issues in cells.items():
+        report_count = sum(
+            case_counts.get(issue.case_id, (1, 1))[0] for issue in issues
+        )
+        if report_count < HOTSPOT_MIN_REPORTS:
+            continue
+        top_category = Counter(issue.category for issue in issues).most_common(1)[0][0]
+        newest_first = sorted(
+            issues, key=lambda issue: _as_utc(issue.created_at), reverse=True
+        )
+        hotspots.append(
+            {
+                "latitude": latitude,
+                "longitude": longitude,
+                "case_count": len(issues),
+                "report_count": report_count,
+                "address": next(
+                    (issue.address for issue in newest_first if issue.address), None
+                ),
+                "top_category": top_category,
+                "top_category_label": CATEGORY_LABELS[top_category],
+            }
+        )
+
+    hotspots.sort(
+        key=lambda spot: (spot["report_count"], spot["case_count"]), reverse=True
+    )
+    return hotspots[:HOTSPOT_LIMIT]
+
+
+def get_admin_analytics(db: Session) -> dict:
+    primaries = (
+        db.query(Issue)
+        .options(joinedload(Issue.department))
+        .filter(Issue.is_primary.is_(True))
+        .all()
+    )
+    case_counts = case_report_counts(db)
+    total_reports = db.query(Issue).count()
+    total_citizens = db.query(User).filter(User.role == Role.CITIZEN).count()
+
+    open_issues = sum(
+        1 for issue in primaries if issue.status not in CLOSED_STATUSES
+    )
+
+    category_counts = Counter(issue.category for issue in primaries)
+    by_category = sorted(
+        (
+            {"category": category, "label": label, "count": category_counts[category]}
+            for category, label in CATEGORY_LABELS.items()
+        ),
+        key=lambda row: row["count"],
+        reverse=True,
+    )
+
+    status_counts = Counter(issue.status for issue in primaries)
+    by_status = [
+        {"status": status_value, "count": status_counts[status_value]}
+        for status_value in IssueStatus
+    ]
+
+    issues_by_department: dict[int, list[Issue]] = defaultdict(list)
+    unassigned: list[Issue] = []
+    for issue in primaries:
+        if issue.department_id is None:
+            unassigned.append(issue)
+        else:
+            issues_by_department[issue.department_id].append(issue)
+
+    departments = [
+        _department_stats(
+            department.code,
+            department.name,
+            issues_by_department.get(department.id, []),
+        )
+        for department in db.query(Department).order_by(Department.name).all()
+    ]
+    if unassigned:
+        departments.append(_department_stats(None, "Unassigned", unassigned))
+
+    return {
+        "total_issues": len(primaries),
         "open_issues": open_issues,
-        "closed_issues": closed_issues,
+        "closed_issues": len(primaries) - open_issues,
         "total_citizens": total_citizens,
+        "total_reports": total_reports,
+        "avg_resolution_days": _average_resolution_days(primaries),
+        "by_category": by_category,
+        "by_status": by_status,
+        "departments": departments,
+        "hotspots": _find_hotspots(primaries, case_counts),
     }
 
 

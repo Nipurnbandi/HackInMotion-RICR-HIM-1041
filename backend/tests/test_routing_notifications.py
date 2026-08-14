@@ -136,6 +136,49 @@ def test_admin_department_list_shows_open_case_counts(client, citizen_user, admi
     assert by_code["ROADS"]["email"] == "roads@city.gov"
 
 
+def test_notifications_show_delivery_details(client, citizen_user, admin_user):
+    create(client, citizen_user)
+
+    inbox = client.get(
+        "/api/admin/notifications", headers=auth_header(admin_user)
+    ).json()
+    item = inbox["items"][0]
+    assert item["department_name"] == "Roads Department"
+    assert item["department_email"] == "roads@city.gov"
+    assert item["sent_at"] is not None
+
+
+def test_failed_email_shows_as_pending(client, citizen_user, admin_user, monkeypatch):
+    class BrokenNotifier:
+        def send(self, *, to, subject, body):
+            raise ConnectionError("mail server down")
+
+    monkeypatch.setattr(notification_module, "get_notifier", lambda: BrokenNotifier())
+    create(client, citizen_user)
+
+    inbox = client.get(
+        "/api/admin/notifications", headers=auth_header(admin_user)
+    ).json()
+    assert inbox["items"][0]["sent_at"] is None
+
+
+def test_admin_status_update_reaches_the_citizen(client, citizen_user, admin_user):
+    body = create(client, citizen_user)
+
+    response = client.put(
+        f"/api/admin/issues/{body['id']}",
+        json={"status": "IN_PROGRESS"},
+        headers=auth_header(admin_user),
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "IN_PROGRESS"
+
+    detail = client.get(
+        f"/api/citizen/issues/{body['id']}", headers=auth_header(citizen_user)
+    ).json()
+    assert detail["status"] == "IN_PROGRESS"
+
+
 def test_admin_notification_inbox_and_mark_read(client, citizen_user, admin_user):
     create(client, citizen_user)
 
