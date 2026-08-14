@@ -300,15 +300,27 @@ export default function IssueDetails() {
           </h2>
 
           {issue.photo_url ? (
-            <a href={issue.photo_url} target="_blank" rel="noreferrer" className="evidence">
-              <img
-                src={issue.photo_url}
-                alt={`Photo evidence submitted for ${categoryLabel(
-                  issue.category
-                )} report ${issue.tracking_id}`}
-              />
-              <span className="evidence__hint">Open full size</span>
-            </a>
+            <>
+              <a href={issue.photo_url} target="_blank" rel="noreferrer" className="evidence">
+                <img
+                  src={issue.photo_url}
+                  alt={`Photo evidence submitted for ${categoryLabel(
+                    issue.category
+                  )} report ${issue.tracking_id}`}
+                />
+                <span className="evidence__hint">Open full size</span>
+              </a>
+              {issue.photo_verdict === "MATCH" && (
+                <p className="ai-note ai-note--ok">
+                  🤖 {t("details.aiMatch", "AI check: the photo matches the reported category.")}
+                </p>
+              )}
+              {issue.photo_verdict === "MISMATCH" && (
+                <p className="ai-note ai-note--warn">
+                  🤖 {t("details.aiMismatch", "AI check: the photo may not match the reported category — an officer will review it.")}
+                </p>
+              )}
+            </>
           ) : (
             <p className="muted">
               {t("details.nophoto", "No photo was attached to this report.")}

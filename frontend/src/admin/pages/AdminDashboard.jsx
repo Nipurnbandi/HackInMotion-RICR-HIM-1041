@@ -405,6 +405,22 @@ export default function AdminDashboard() {
                                       ⚠ SLA breached
                                     </span>
                                   )}
+                                  {item.photo_verdict === "MATCH" && (
+                                    <span
+                                      className="ai-badge ai-badge--ok"
+                                      title={item.photo_verdict_note}
+                                    >
+                                      🤖 Photo verified
+                                    </span>
+                                  )}
+                                  {item.photo_verdict === "MISMATCH" && (
+                                    <span
+                                      className="ai-badge ai-badge--warn"
+                                      title={item.photo_verdict_note}
+                                    >
+                                      🤖 Photo mismatch?
+                                    </span>
+                                  )}
                                 </span>
                                 <span className="status-control">
                                   <label
@@ -517,6 +533,22 @@ export default function AdminDashboard() {
                                     >
                                       View current proof photo
                                     </a>
+                                  )}
+                                  {item.resolution_photo_verdict === "MATCH" && (
+                                    <p
+                                      className="ai-note ai-note--ok"
+                                      title={item.resolution_photo_verdict_note}
+                                    >
+                                      🤖 AI check: proof photo shows the fix
+                                    </p>
+                                  )}
+                                  {item.resolution_photo_verdict === "MISMATCH" && (
+                                    <p
+                                      className="ai-note ai-note--warn"
+                                      title={item.resolution_photo_verdict_note}
+                                    >
+                                      🤖 AI check: proof photo may not show the fix
+                                    </p>
                                   )}
                                 </div>
 

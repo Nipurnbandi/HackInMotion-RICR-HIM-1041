@@ -91,6 +91,8 @@ const CASES = [
     priority_score: 17.1,
     escalated: true,
     sla_days: 7,
+    photo_verdict: "MATCH",
+    photo_verdict_note: "Clearly shows a pothole.",
     department_code: "ROADS",
     department_name: "Roads Department",
   },
@@ -335,7 +337,9 @@ describe("AdminDashboard", () => {
     );
     expect(within(rows[0]).getByText("⚠ SLA breached")).toBeInTheDocument();
     expect(within(rows[0]).getByText("👍 2 supporters")).toBeInTheDocument();
+    expect(within(rows[0]).getByText("🤖 Photo verified")).toBeInTheDocument();
     expect(within(rows[1]).queryByText("⚠ SLA breached")).not.toBeInTheDocument();
+    expect(within(rows[1]).queryByText(/🤖/)).not.toBeInTheDocument();
   });
 
   it("does not fetch map or analytics data until those views open", async () => {

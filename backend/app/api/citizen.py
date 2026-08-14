@@ -39,8 +39,10 @@ from app.services.citizen import (
     issue_effective_status,
     issue_response,
     list_citizen_issues,
+    sniff_image_type,
     validate_photo,
 )
+from app.services.photo_verification import verify_issue_photo
 from app.services.city_map import list_map_issues
 from app.services.lifecycle import confirm_resolution, reopen_issue
 from app.services.notification import notify_new_case, send_pending_notifications
@@ -144,6 +146,12 @@ async def create_issue(
     if issue.is_primary:
         notify_new_case(db, issue)
         background_tasks.add_task(send_pending_notifications)
+
+    if photo_bytes is not None:
+        media_type = sniff_image_type(photo_bytes) or "image/jpeg"
+        background_tasks.add_task(
+            verify_issue_photo, issue.id, photo_bytes, media_type
+        )
 
     return issue
 

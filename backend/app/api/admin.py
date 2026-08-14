@@ -1,6 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -29,8 +37,9 @@ from app.services.admin import (
     update_issue,
 )
 from app.services.city_map import list_map_issues
-from app.services.citizen import validate_photo
+from app.services.citizen import sniff_image_type, validate_photo
 from app.services.escalation import run_sla_escalations
+from app.services.photo_verification import verify_resolution_photo
 from app.services.notification import list_notifications, mark_notification_read
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -154,6 +163,7 @@ def admin_update_issue(
 @router.post("/issues/{issue_id}/resolution-photo", response_model=AdminIssueResponse)
 async def admin_upload_resolution_photo(
     issue_id: int,
+    background_tasks: BackgroundTasks,
     photo: Annotated[UploadFile, File()],
     _: User = Depends(admin_only),
     db: Session = Depends(get_db),
@@ -164,7 +174,10 @@ async def admin_upload_resolution_photo(
         max_bytes=settings.max_upload_size_bytes,
         declared_content_type=photo.content_type,
     )
-    return save_resolution_proof(db, issue_id, content=content, extension=extension)
+    issue = save_resolution_proof(db, issue_id, content=content, extension=extension)
+    media_type = sniff_image_type(content) or "image/jpeg"
+    background_tasks.add_task(verify_resolution_photo, issue.id, content, media_type)
+    return issue
 
 
 @router.delete("/issues/{issue_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -44,9 +44,13 @@ class IssueResponse(BaseModel):
     longitude: float | None
     address: str | None
     photo_url: str | None
+    photo_verdict: str | None = None
+    photo_verdict_note: str = ""
     status: IssueStatus
     resolution_note: str = ""
     resolution_photo_url: str | None = None
+    resolution_photo_verdict: str | None = None
+    resolution_photo_verdict_note: str = ""
     created_at: datetime
     updated_at: datetime
 

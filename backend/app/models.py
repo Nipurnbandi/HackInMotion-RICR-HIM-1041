@@ -70,6 +70,10 @@ class Issue(Base, TimestampMixin):
     address: Mapped[str | None] = mapped_column(String(500), default=None)
 
     photo_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    photo_verdict: Mapped[str | None] = mapped_column(String(20), default=None)
+    photo_verdict_note: Mapped[str] = mapped_column(
+        Text, default="", server_default=""
+    )
 
     status: Mapped[IssueStatus] = mapped_column(
         Enum(IssueStatus, name="issue_status", native_enum=False),
@@ -81,6 +85,12 @@ class Issue(Base, TimestampMixin):
     resolution_note: Mapped[str] = mapped_column(Text, default="", server_default="")
     resolution_photo_url: Mapped[str | None] = mapped_column(
         String(500), default=None
+    )
+    resolution_photo_verdict: Mapped[str | None] = mapped_column(
+        String(20), default=None
+    )
+    resolution_photo_verdict_note: Mapped[str] = mapped_column(
+        Text, default="", server_default=""
     )
     escalated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), default=None

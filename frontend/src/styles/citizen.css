@@ -1407,6 +1407,42 @@
   color: var(--color-primary);
 }
 
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid currentColor;
+}
+
+.ai-badge--ok {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.ai-badge--warn {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.ai-note {
+  margin-top: var(--space-2);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.ai-note--ok {
+  color: var(--color-success);
+}
+
+.ai-note--warn {
+  color: var(--color-warning);
+}
+
 .vote-button {
   font: inherit;
   font-size: var(--font-xs);

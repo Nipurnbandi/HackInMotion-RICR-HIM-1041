@@ -85,10 +85,14 @@ def other_citizen(db):
 @pytest.fixture(autouse=True)
 def seed_routing(setup_db, db, monkeypatch):
     import app.services.notification as notification_module
+    import app.services.photo_verification as photo_verification_module
     from app.services.routing import seed_departments
 
     seed_departments(db)
     monkeypatch.setattr(notification_module, "SessionLocal", TestingSessionLocal)
+    monkeypatch.setattr(
+        photo_verification_module, "SessionLocal", TestingSessionLocal
+    )
 
 
 @pytest.fixture(autouse=True)

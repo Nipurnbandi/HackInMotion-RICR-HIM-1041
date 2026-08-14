@@ -159,6 +159,9 @@ const HINDI = {
   "details.reopening": "फिर से खोला जा रहा है…",
   "details.confirmedThanks":
     "✅ आपने इस समाधान की पुष्टि की। धन्यवाद!",
+  "details.aiMatch": "AI जाँच: फोटो रिपोर्ट की गई श्रेणी से मेल खाती है।",
+  "details.aiMismatch":
+    "AI जाँच: फोटो श्रेणी से मेल नहीं खा सकती — एक अधिकारी इसकी समीक्षा करेंगे।",
   "details.loading": "रिपोर्ट लोड हो रही है…",
 
   // City map

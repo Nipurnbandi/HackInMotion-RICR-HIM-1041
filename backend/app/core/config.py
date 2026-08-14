@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     upload_url_prefix: str = "/uploads"
     max_upload_size_bytes: int = 5 * 1024 * 1024
 
+    anthropic_api_key: str = ""
+    photo_verification_model: str = "claude-opus-5"
+
     notifier: str = "console"
     smtp_host: str = ""
     smtp_port: int = 587
