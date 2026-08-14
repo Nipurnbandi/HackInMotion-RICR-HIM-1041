@@ -1,0 +1,115 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "background": "#060913",
+    "primaryColor": "#141a33",
+    "primaryTextColor": "#e7ecff",
+    "primaryBorderColor": "#5b7bff",
+    "lineColor": "#7c9aff",
+    "fontFamily": "Segoe UI, sans-serif",
+    "fontSize": "15px",
+    "clusterBkg": "#0b1029",
+    "clusterBorder": "#2c3560",
+    "edgeLabelBackground": "#0b1029",
+    "titleColor": "#e7ecff"
+  },
+  "flowchart": { "curve": "basis", "nodeSpacing": 30, "rankSpacing": 90 }
+}}%%
+flowchart LR
+
+subgraph USERS["👥 &nbsp;USERS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    CITIZEN["📱 <b>Citizen Portal</b><br/>light · English + हिन्दी<br/>report wizard · city map<br/>upvote · track · reopen"]
+    ADMINU["🖥️ <b>Admin Command Center</b><br/>dark glass theme<br/>priority queue · live map<br/>analytics · resolution"]
+    PUBLICU["🌍 <b>Public Report Card</b><br/>/transparency · no login<br/>department grades A+ – D<br/>computed live"]
+end
+
+subgraph FE["⚛️ &nbsp;FRONTEND · React 19 + Vite&nbsp;&nbsp;&nbsp;"]
+    ROUTER["🛡️ React Router 7<br/>ProtectedRoute · RoleRoute"]
+    I18N["🌐 i18n engine<br/>EN / हिन्दी dictionaries"]
+    CITYMAP["🗺️ CityMap · react-leaflet<br/>emoji pins · color modes"]
+    CHARTS["📊 SVG analytics charts<br/>CVD-validated palette"]
+end
+
+subgraph BE["🚀 &nbsp;BACKEND · FastAPI /api&nbsp;&nbsp;&nbsp;"]
+    AUTH["🔐 /auth<br/>JWT · bcrypt · RBAC"]
+    CITAPI["🙋 /citizen<br/>reports · map · votes<br/>confirm / reopen"]
+    ADMAPI["🏛️ /admin<br/>queue · analytics<br/>resolution · inbox"]
+    PUBAPI["📢 /public<br/>transparency scores"]
+end
+
+subgraph SVC["🧠 &nbsp;DOMAIN SERVICES&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    DUP["🔁 <b>Duplicate detection</b><br/>radius + recency window<br/>→ one case per problem"]
+    ROUTESVC["🗂️ <b>Department routing</b><br/>data-driven category_routes"]
+    PRIO["⚖️ <b>Priority scoring</b><br/>severity × people × age"]
+    SLA["⏰ <b>SLA escalation</b><br/>breach → higher authority<br/>+ 1.5× priority boost"]
+    LIFE["🔄 <b>Lifecycle</b><br/>status history audit trail<br/>resolution evidence"]
+    TRANSP["🏆 <b>Transparency scoring</b><br/>resolution + SLA + speed"]
+    AIPHOTO["🤖 <b>AI photo verification</b><br/>Claude vision verdicts"]
+    NOTIF["📧 <b>Notifications</b><br/>dept. inbox + email retry"]
+end
+
+subgraph DB["🗄️ &nbsp;DATA · PostgreSQL · Alembic&nbsp;&nbsp;&nbsp;"]
+    T1[("users · roles")]
+    T2[("issues · geo · cases")]
+    T3[("status_history")]
+    T4[("departments ·<br/>category_routes")]
+    T5[("issue_votes")]
+    T6[("notifications")]
+end
+
+subgraph EXT["☁️ &nbsp;EXTERNAL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    TILES["🗺️ OSM / CARTO map tiles<br/>free · no API key"]
+    GEO["📍 Nominatim geocoding<br/>graceful fallback"]
+    CLAUDE["✨ Claude API vision<br/>optional key"]
+    MAIL["✉️ SMTP email"]
+end
+
+CITIZEN --> ROUTER
+ADMINU --> ROUTER
+PUBLICU --> ROUTER
+ROUTER --- I18N
+ROUTER --- CITYMAP
+ROUTER --- CHARTS
+
+ROUTER == "JSON · JWT cookie" ==> AUTH
+CITYMAP --> CITAPI
+CHARTS --> ADMAPI
+ROUTER --> PUBAPI
+
+CITAPI --> DUP --> ROUTESVC --> NOTIF
+CITAPI --> LIFE
+CITAPI -. "background" .-> AIPHOTO
+ADMAPI --> PRIO
+ADMAPI --> SLA
+ADMAPI --> LIFE
+ADMAPI -. "background" .-> AIPHOTO
+PUBAPI --> TRANSP
+
+AUTH --> T1
+DUP --> T2
+ROUTESVC --> T4
+PRIO --> T5
+SLA --> T2
+LIFE --> T3
+TRANSP --> T2
+AIPHOTO --> T2
+NOTIF --> T6
+
+CITYMAP -.-> TILES
+CITIZEN -.-> GEO
+AIPHOTO -.-> CLAUDE
+NOTIF -.-> MAIL
+
+classDef users fill:#141a33,stroke:#5b7bff,stroke-width:2px,color:#e7ecff
+classDef fe fill:#10203a,stroke:#38bdf8,stroke-width:2px,color:#e7ecff
+classDef be fill:#131f2e,stroke:#34d399,stroke-width:2px,color:#e7ecff
+classDef svc fill:#1d1733,stroke:#9085e9,stroke-width:2px,color:#e7ecff
+classDef db fill:#241a2e,stroke:#d55181,stroke-width:2px,color:#e7ecff
+classDef ext fill:#26200f,stroke:#c98500,stroke-width:2px,color:#e7ecff
+
+class CITIZEN,ADMINU,PUBLICU users
+class ROUTER,I18N,CITYMAP,CHARTS fe
+class AUTH,CITAPI,ADMAPI,PUBAPI be
+class DUP,ROUTESVC,PRIO,SLA,LIFE,TRANSP,AIPHOTO,NOTIF svc
+class T1,T2,T3,T4,T5,T6 db
+class TILES,GEO,CLAUDE,MAIL ext

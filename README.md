@@ -1,44 +1,85 @@
-# SmartCity — Civic Issue Reporting & Resolution Platform
+# 🏙 SmartCity — Civic Issue Reporting & Resolution Platform
 
-Citizens report civic problems (potholes, streetlights, garbage, water leaks…) by pinning them on a map with a photo. The city administration sees every real-world problem exactly once — deduplicated, routed to the right department, and prioritised — then works it through a tracked lifecycle until the reporter confirms the fix.
+> **Report it once. Track it live. Hold the city accountable.**
 
-Two purpose-built interfaces share one backend:
+Citizens pin civic problems — potholes, dead streetlights, overflowing bins, water leaks — on a map with photo evidence. The administration sees every real-world problem **exactly once** (deduplicated automatically), routed to the right department, ranked by real impact, escalated when it sits too long, and worked through a fully audited lifecycle until the **reporter themselves confirms the fix**. A public report card scores every department on how well they actually deliver.
 
-- **Citizen portal** (light theme) — a simple, phone-friendly reporting flow with live status tracking and a public city map.
-- **Admin command center** (dark theme) — a data-dense dashboard with a prioritised work queue, a live city map, and analytics computed from the real database.
-
----
-
-## Requirement coverage
-
-| # | Requirement | Where it lives |
-|---|---|---|
-| 1 | Two-role auth & RBAC | JWT cookie auth; `require_roles` dependency guards every endpoint on the backend (`app/core/dependencies.py`), `RoleRoute` guards the frontend routes |
-| 2 | Map-based reporting | `ReportIssue` wizard: map pin + GPS, category grid, description, photo upload ([maps API choice](#maps--geolocation-api)) |
-| 3 | Duplicate detection | Custom algorithm in `app/services/citizen.py` — see [How duplicate detection works](#how-duplicate-detection-works) |
-| 4 | Automated department routing | Data-driven `category_routes` table (`app/services/routing.py`) — add a category or department with a DB row, no code change |
-| 5 | Issue lifecycle | Status workflow + full status history, admin resolution notes & proof photos, citizen confirm/reopen |
-| 6 | Interactive city map | `CityMap` component — live markers color-coded by status *or* category, for both roles |
-| 7 | Admin analytics | `/api/admin/analytics` computes category/status/department splits, avg resolution time, department comparison, and hotspots from the live database |
-| 8 | Database integration | PostgreSQL via SQLAlchemy + Alembic migrations: users, issues, locations, status history, departments, routes, notifications, resolution evidence |
-| 9 | Responsive, clean UI | Mobile-first CSS, responsive breakpoints across both portals |
-| 10 | Error handling | GPS denial fallback, photo validation (type/size/magic bytes), geocoding failure fallback to coordinates, network error states with retry everywhere |
-
-### Beyond the brief
-
-| Feature | How it works |
-|---|---|
-| **SLA-based escalation** | Every category has an SLA (2 days for garbage overflow … 10 for damaged property, `app/core/issue_types.py`). An idempotent sweep runs on every admin load: open cases past their deadline are flagged, logged in their status history, boosted ×1.5 in the priority queue with an "⚠ SLA breached" badge, and the higher authority (General Administration) gets a notification. |
-| **Citizen upvoting** | Citizens support existing problems straight from the city map popups (`POST /citizen/issues/{id}/vote`, toggleable). Reporters of a case can't double-dip — their report already counts. Votes add to the "people affected" factor of the priority score, so high-impact problems rise in the department queues. |
-| **Public transparency score** | `GET /api/public/transparency` — **no login required** — computes a 0–100 score and A+–D grade per department: 50% resolution rate + 30% resolved-within-SLA + 20% speed vs a 14-day baseline. Rendered at `/transparency` as a public report card, linked from the login page and the citizen footer. |
-| **Multi-language reporting** | A language switcher (🌐) in the citizen portal flips the entire reporting experience — navigation, category names and hints, the 5-step wizard, statuses, timeline, and lifecycle updates — between English and हिन्दी, persisted per device. Free-text reports accept any script; adding another regional language is one dictionary in `frontend/src/shared/i18n.jsx`. |
-| **AI photo verification** | With an `ANTHROPIC_API_KEY` configured, every uploaded report photo is checked by Claude vision against the reported category ("does this actually look like a pothole?"), and every proof-of-resolution photo against "does this show the issue fixed?". Verdicts run as background tasks (submission never blocks), are stored on the issue, and surface as 🤖 badges in the admin queue and on the citizen's report page. Without a key, photos are simply marked unverified — nothing breaks. `app/services/photo_verification.py`. |
+![Backend tests](https://img.shields.io/badge/backend_tests-110_passing-brightgreen) ![Frontend tests](https://img.shields.io/badge/frontend_tests-59_passing-brightgreen) ![Stack](https://img.shields.io/badge/FastAPI_·_React_19_·_PostgreSQL-0b1029) ![Languages](https://img.shields.io/badge/English_+_हिन्दी-orange) ![AI](https://img.shields.io/badge/AI_photo_verification-Claude_vision-8A2BE2)
 
 ---
 
-## Maps & Geolocation API
+## 🏗 Architecture
 
-**What we use**
+Every layer below is real, tested code in this repository — the diagram source lives in [`docs/architecture.mmd`](docs/architecture.mmd).
+
+![SmartCity architecture](architecture-diagram.png)
+
+**How a report flows through the system:**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as 📱 Citizen
+    participant API as 🚀 FastAPI
+    participant DUP as 🔁 Duplicate detection
+    participant AI as 🤖 Claude vision
+    participant D as 🏛 Department
+    actor A as 🖥 Admin
+
+    C->>API: Pin location + category + photo + description
+    API->>DUP: Same category, ~same spot, recent?
+    alt existing open case nearby
+        DUP-->>API: Link as member of case (no new case)
+    else new problem
+        DUP-->>API: New case → auto-route by category
+        API->>D: 📧 Notify department inbox + email
+    end
+    API-->>C: Tracking ID (SMC-2026-XXXXXX)
+    API--)AI: background: does photo match category?
+    AI--)API: 🤖 verdict stored on the issue
+
+    A->>API: Work queue (priority = severity × people × age)
+    Note over API: SLA sweep — overdue cases escalate<br/>to higher authority + 1.5× priority
+    A->>API: Status → Resolved + note + proof photo
+    API--)AI: background: does proof show the fix?
+    API-->>C: Full status history + resolution evidence
+    C->>API: ✅ Confirm fix — or ↩ reopen the whole case
+```
+
+---
+
+## ⚡ The features that make it powerful
+
+### 🔁 One problem = one case (custom duplicate detection)
+Fifteen people reporting the same pothole doesn't create fifteen tickets. Each new report is checked against **per-category geographic radii** (25 m for a pothole … 80 m for a water leak) and **recency windows** (3–60 days) — a match links the report into the existing case, and every reporter still tracks it under their own ID. The citizen count then *boosts* the case's priority, so mass-reported problems rise to the top instead of clogging the queue.
+
+### ⏰ SLA escalation — nothing rots in a queue
+Every category has a service-level limit (2 days for garbage overflow … 10 for damaged property). An idempotent sweep runs on every admin load: breached cases get flagged **⚠ SLA breached**, boosted ×1.5 in priority, logged in their audit trail, and General Administration — the higher authority — is notified automatically.
+
+### 🤖 AI photo verification (Claude vision)
+Every uploaded report photo is checked in the background against the claimed category — *"does this actually look like a pothole?"* — and every proof-of-resolution photo against *"does this show the issue fixed?"*. Verdicts surface as badges in the admin queue with a one-sentence reason. No API key? The system degrades gracefully to unverified. Submissions never block on AI.
+
+### 🏆 Public transparency report card
+`/transparency` needs **no login**. Every department gets a live 0–100 score and an A+–D grade from three weighted signals — resolution rate (50 %), resolved-within-SLA rate (30 %), and speed vs a 14-day baseline (20 %) — computed straight from the database on every request. Nobody curates it; the methodology is printed on the page.
+
+### 🗺 Live city map with citizen upvoting
+Every active case is an emoji pin, color-coded by **status or category** (toggle), with popups showing report counts, department, and tracking ID. Citizens **upvote** problems that affect them straight from the popup — reporters can't double-dip on their own case — and votes feed directly into the priority formula departments work from.
+
+### 🔄 A lifecycle that closes the loop
+Every transition is recorded in an immutable **status history** — who (citizen or administration), old → new status, note, photo, timestamp. Admins attach resolution notes and proof photos; reporters see the full trail and get the last word: **"Yes, it's fixed"** or **"No, reopen it"** — and reopening a duplicate reopens the *whole case* for everyone.
+
+### 🌐 Bilingual, phone-first
+A 🌐 switcher flips the entire citizen experience — navigation, the 5-step wizard, categories, statuses, timeline, lifecycle updates — between **English and हिन्दी**, persisted per device. Adding another regional language is one dictionary file. Everything is responsive down to a 375 px phone, because citizens report from the street.
+
+### 📊 Analytics computed live, drawn by hand
+The admin analytics tab is 100 % real aggregation — category/status/department splits, average resolution time, department comparison, and **hotspot detection** (~110 m grid cells that keep collecting reports). Charts are hand-built SVG with a palette validated for color-vision deficiency on the dark surface — no chart library, no fake numbers.
+
+### 🛡 Security that isn't just hidden buttons
+Role-based access control is enforced **on the backend** — every admin endpoint rejects citizens with 403 and vice versa, covered by tests. Uploads are validated by magic bytes (not just extensions), JWTs live in HTTP-only cookies, and passwords are bcrypt-hashed.
+
+---
+
+## 🗺 Maps & Geolocation API — what we chose and why
 
 | Concern | Choice |
 |---|---|
@@ -46,71 +87,52 @@ Two purpose-built interfaces share one backend:
 | Base tiles (citizen, light) | OpenStreetMap standard raster tiles |
 | Base tiles (admin, dark) | CARTO *Dark Matter* tiles (OSM data) |
 | Reverse geocoding | [OSM Nominatim](https://nominatim.org/) `reverse` API |
-| Device location | Browser Geolocation API (`navigator.geolocation`) |
+| Device location | Browser Geolocation API |
 
-**Why we chose it**
+**Why.** We evaluated three options: **Google Maps Platform** (best data, but API key + billing + restrictive caching terms), **Mapbox GL JS** (beautiful vector tiles, but key-bound and a heavy bundle), and **Leaflet + OpenStreetMap** — which we chose: completely free and key-less (nothing to leak, nothing to bill), open data, a ~42 KB library with mature React bindings, and provider-agnostic — any XYZ tile server swaps in via env config, which is exactly how the admin map uses CARTO's dark tiles. Nominatim adds free reverse geocoding on the same open dataset. Trade-offs accepted: raster tiles are less polished than vector maps, and public Nominatim has fair-use rate limits — both swappable behind `VITE_MAP_TILE_URL` / `VITE_MAP_TILE_URL_DARK` / `VITE_GEOCODING_URL` if the city later pays for a commercial provider.
 
-We evaluated three options:
+**How it's integrated** (all under `frontend/src`):
 
-- **Google Maps Platform** — best-in-class data, but needs an API key with billing enabled, has restrictive caching/usage terms, and locks the project to one vendor.
-- **Mapbox GL JS** — beautiful vector tiles, but again API-key + quota-bound, and a much heavier bundle.
-- **Leaflet + OpenStreetMap** *(chosen)* — completely free and key-less (nothing to leak, nothing to bill), open data, a ~42 KB library with mature React bindings, and provider-agnostic: any XYZ tile server can be swapped in via env config (which is exactly how the admin map uses CARTO's dark tiles). Nominatim gives us reverse geocoding on the same open dataset.
-
-Trade-offs we accepted: OSM raster tiles are less polished than Google/Mapbox vector maps, and public Nominatim has fair-use rate limits — fine at this scale, and both are swappable behind env vars (`VITE_MAP_TILE_URL`, `VITE_MAP_TILE_URL_DARK`, `VITE_GEOCODING_URL`) if the city later pays for a commercial provider.
-
-**How it's integrated** (all in `frontend/src`)
-
-- `citizen/components/LocationPicker.jsx` — reporting step 2: tap-to-pin, draggable marker, "Use my current location" (Geolocation API with denial/timeout fallback messaging), and debounced/abortable reverse geocoding that fills the address automatically. If geocoding fails, coordinates are used — the report never blocks on a third-party service.
-- `shared/components/CityMap.jsx` — the live city map both roles share: one emoji marker chip per case with a color ring (status or category mode), popups with case details, auto `fitBounds`, and a legend computed from what's actually on screen.
-- `citizen/components/IssueLocationMap.jsx` — static mini-map on the report detail page.
+- `citizen/components/LocationPicker.jsx` — reporting step 2: tap-to-pin, draggable marker, **"Use my current location"** (with denial/timeout fallback messaging), and abortable reverse geocoding that auto-fills the address. If geocoding fails, coordinates are used — a report never blocks on a third-party service.
+- `shared/components/CityMap.jsx` — the shared live map: one emoji marker chip per case with a colored ring (status or category mode), vote buttons, auto `fitBounds`, and a legend computed from what's actually on screen.
+- `citizen/components/IssueLocationMap.jsx` — static mini-map on each report's detail page.
 
 ---
 
-## Architecture
+## ✅ Requirement coverage
 
-```
-frontend/  React 19 + Vite + React Router 7 + react-leaflet   (JWT cookie auth)
-backend/   FastAPI + SQLAlchemy 2 + Alembic + PostgreSQL      (service-layer architecture)
-           app/api/       thin routers (auth, citizen, admin)
-           app/services/  domain logic (citizen, admin, routing, lifecycle, city_map, notification)
-           app/models.py  User, Issue, StatusHistory, Department, CategoryRoute, Notification
-```
+| # | Requirement | Where it lives |
+|---|---|---|
+| 1 | Two-role auth & backend-enforced RBAC | `app/core/dependencies.py` (`require_roles`), `RoleRoute` on the frontend |
+| 2 | Map-based reporting (pin + category + photo + description) | `ReportIssue` wizard + [maps section](#-maps--geolocation-api--what-we-chose-and-why) |
+| 3 | Duplicate detection (own algorithm) | `app/services/citizen.py` — radius + recency case grouping |
+| 4 | Automated department routing (extensible) | `category_routes` table — add a category with a DB row, zero code |
+| 5 | Issue lifecycle & status workflow | Status history, resolution notes & proof, citizen confirm/reopen |
+| 6 | Interactive city map | `CityMap` — color-coded live markers for both roles |
+| 7 | Admin analytics dashboard (real data) | `/api/admin/analytics` — splits, avg resolution, comparison, hotspots |
+| 8 | Database integration | PostgreSQL · SQLAlchemy 2 · 7 Alembic migrations — users, issues, locations, history, departments, votes, evidence |
+| 9 | Responsive, purpose-built UIs | Light phone-first citizen portal vs dark data-dense admin |
+| 10 | Error handling | GPS denial, upload validation (type/size/magic bytes), geocoding fallback, retryable error states |
 
-### How duplicate detection works
-
-When a report is submitted (`app/services/citizen.py`):
-
-1. Per-category **radius** (25 m for a pothole … 80 m for water leakage) and **recency window** (3 days for garbage … 60 days for potholes) come from `app/core/issue_types.py`.
-2. A degree-space bounding box around the new pin is searched for an **open case** of the same category inside the window.
-3. Match → the report is **linked as a member of the existing case** (it keeps its own tracking ID, the reporter still sees their own report; the case's citizen count grows, boosting priority). No match → the report becomes a new case's **primary**.
-
-Members inherit the case's *effective status*, so when an admin resolves the case, every reporter of that pothole sees "Resolved".
-
-### Lifecycle & status history
-
-Every transition is recorded in the `status_history` table (who — citizen or admin, old → new status, note, optional photo). Admins add **resolution notes** and upload **proof-of-resolution photos**; reporters see the full activity trail and, once a case is resolved, can **confirm the fix** or **reopen** the whole case if the problem persists.
-
-### Priority & analytics
-
-The work queue orders cases by `severity-weight × citizens-affected × (1 + days-open / 7)`. The analytics endpoint aggregates live data: splits by category/status/department, average resolution time (overall + per department), and **hotspots** — ~110 m map cells accumulating 2+ reports.
+**Beyond the brief:** SLA escalation · citizen upvoting · public transparency score · multi-language (EN/हिन्दी) · AI photo verification — all detailed [above](#-the-features-that-make-it-powerful).
 
 ---
 
-## Getting started
+## 🚀 Getting started
 
 ### Backend
 
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate            # Windows   (source .venv/bin/activate on macOS/Linux)
+.venv\Scripts\activate            # source .venv/bin/activate on macOS/Linux
 pip install -r requirements.txt
-copy .env.example .env            # then set DATABASE_URL + JWT_SECRET_KEY
+copy .env.example .env            # set DATABASE_URL + JWT_SECRET_KEY (ANTHROPIC_API_KEY optional)
 alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-Create an administrator account:
+Create an administrator:
 
 ```bash
 python -m scripts.create_admin admin@city.gov <password>
@@ -121,18 +143,24 @@ python -m scripts.create_admin admin@city.gov <password>
 ```bash
 cd frontend
 npm install
-npm run dev                       # http://localhost:5173, proxies /api to :8000
+npm run dev                       # http://localhost:5173 — proxies /api to :8000
 ```
 
 ### Tests
 
 ```bash
-cd backend && pytest              # 101 tests: auth/RBAC, duplicates, routing, lifecycle, analytics
-cd frontend && npm test           # 54 tests: reporting flow, dashboards, maps, lifecycle UI
+cd backend && pytest              # 110 tests — auth/RBAC, duplicates, routing, lifecycle, SLA, votes, transparency, AI verification
+cd frontend && npm test           # 59 tests — wizard, dashboards, maps, lifecycle UI, i18n, badges
 ```
 
 ---
 
-## API
+## 📚 Documentation
 
-See [api-documentation.md](api-documentation.md) for the full endpoint reference.
+| Document | Contents |
+|---|---|
+| [api-documentation.md](api-documentation.md) | Full endpoint reference — auth, citizen, admin, public |
+| [docs/architecture.mmd](docs/architecture.mmd) | Editable Mermaid source of the architecture diagram |
+| `backend/.env.example` | Every configuration knob, annotated |
+
+**Tech stack:** FastAPI · SQLAlchemy 2 · Alembic · PostgreSQL · Pydantic v2 · React 19 · Vite · React Router 7 · react-leaflet · Anthropic Claude API (vision) · pytest · Vitest + Testing Library.
