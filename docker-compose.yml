@@ -1,0 +1,73 @@
+# SmartCity backend — PostgreSQL + the API, ready to run anywhere Docker runs.
+#
+#   docker compose up --build
+#
+# API      → http://localhost:8000
+# Docs     → http://localhost:8000/docs
+# Health   → http://localhost:8000/healthz
+#
+# Override any value below with a .env file next to this file, e.g.
+#   JWT_SECRET_KEY=<long random string>
+#   ADMIN_EMAIL=admin@city.gov
+#   ADMIN_PASSWORD=<at least 8 characters>
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smartcity}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartcity}
+      POSTGRES_DB: ${POSTGRES_DB:-smartcity}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartcity} -d ${POSTGRES_DB:-smartcity}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # Photo evidence lives on disk; keep it across container rebuilds.
+      - uploads:/app/uploads
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-smartcity}:${POSTGRES_PASSWORD:-smartcity}@db:5432/${POSTGRES_DB:-smartcity}
+
+      # Override in production — this default is a development convenience.
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-only-secret-change-me}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+
+      APP_NAME: SmartCity API
+      DEBUG: "false"
+
+      # Origins allowed to call this API from a browser. The dev frontend runs
+      # on :5173; add your deployed frontend's origin here too.
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+
+      UPLOAD_DIR: /app/uploads
+      MAX_UPLOAD_SIZE_BYTES: ${MAX_UPLOAD_SIZE_BYTES:-5242880}
+
+      # console = log notifications, email = real SMTP delivery.
+      NOTIFIER: ${NOTIFIER:-console}
+
+      # Set both to provision the first administrator on startup.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+
+      # Optional — enables AI photo verification when set.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PHOTO_VERIFICATION_MODEL: ${PHOTO_VERIFICATION_MODEL:-claude-opus-5}
+
+volumes:
+  db-data:
+  uploads:

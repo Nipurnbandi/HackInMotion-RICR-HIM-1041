@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
+    # Built frontend (Vite `dist`) served by this app in single-container
+    # deployments. Empty in local dev, where Vite serves the frontend itself.
+    frontend_dist: str = ""
+
     upload_dir: str = "uploads"
     upload_url_prefix: str = "/uploads"
     max_upload_size_bytes: int = 5 * 1024 * 1024
@@ -35,6 +39,18 @@ class Settings(BaseSettings):
     def parse_cors_origins(cls, value):
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalise_database_url(cls, value):
+        """Managed Postgres providers (Render, Heroku, Fly) hand out
+        `postgres://` or `postgresql://` URLs. SQLAlchemy 2 resolves those to
+        psycopg2, which isn't installed — name the psycopg 3 driver instead."""
+        if isinstance(value, str):
+            for prefix in ("postgresql://", "postgres://"):
+                if value.startswith(prefix):
+                    return "postgresql+psycopg://" + value[len(prefix) :]
         return value
 
 

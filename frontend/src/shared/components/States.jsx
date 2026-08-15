@@ -1,8 +1,10 @@
 export function LoadingState({ label = "Loading…" }) {
   return (
     <div className="state state--loading" role="status" aria-live="polite">
-      <span className="spinner" aria-hidden="true" />
-      <p>{label}</p>
+      <span className="skeleton__bar skeleton__bar--w40" aria-hidden="true" />
+      <span className="skeleton__bar" aria-hidden="true" />
+      <span className="skeleton__bar skeleton__bar--w70" aria-hidden="true" />
+      <p className="visually-hidden">{label}</p>
     </div>
   );
 }

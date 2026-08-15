@@ -1,0 +1,19 @@
+# Keep the build context small and secrets out of the image.
+**/.venv
+**/venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/node_modules
+**/dist
+**/.env
+backend/app.db*
+backend/uploads
+backend/tests
+.git
+.github
+.claude
+docs
+*.pptx
+*.png
+*.md

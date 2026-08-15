@@ -157,6 +157,75 @@ cd frontend && npm test           # 59 tests — wizard, dashboards, maps, lifec
 
 ---
 
+## 🐳 Deploying the backend with Docker
+
+The backend ships as a self-contained image: it waits for the database, applies
+every migration, provisions the first administrator if you asked for one, and
+then serves the API. Nothing else to run by hand.
+
+### Run the whole stack
+
+`docker-compose.yml` brings up PostgreSQL and the API together:
+
+```bash
+docker compose up --build
+```
+
+The API is then on <http://localhost:8000> — interactive docs at `/docs`,
+liveness probe at `/healthz`.
+
+Copy `.env.example` to `.env` first to set real values. At minimum set
+`JWT_SECRET_KEY`; set `ADMIN_EMAIL` and `ADMIN_PASSWORD` too and the first
+admin account is created on startup, which is how you get in on hosts that
+give you no shell.
+
+### Or build the image alone
+
+```bash
+docker build -t smartcity-api ./backend
+```
+
+Point `DATABASE_URL` at any PostgreSQL instance and run it. `postgres://` and
+`postgresql://` URLs — the format managed providers hand out — are rewritten to
+the psycopg 3 driver automatically, so you can paste the provider's URL as-is.
+
+### What the image does for you
+
+| Behaviour | Why it matters |
+|---|---|
+| Waits up to 60s for the database | Containers start in parallel with their database, and managed Postgres can drop connections during failover |
+| Applies migrations on every boot | A redeploy is never out of step with the schema |
+| Runs as a non-root user (uid 10001) | Nothing in the container runs with more privilege than it needs |
+| `HEALTHCHECK` against `/healthz` | Orchestrators can tell a wedged container from a live one |
+| Idempotent startup | Restarts and redeploys are safe: migrations no-op, admin bootstrap skips an existing account |
+
+### Configuration
+
+Every variable is documented in [`.env.example`](.env.example). The ones that
+matter most in production:
+
+| Variable | Notes |
+|---|---|
+| `JWT_SECRET_KEY` | **Required.** Generate with `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+| `DATABASE_URL` | Defaults to the bundled `db` service under Compose |
+| `DEBUG` | Keep `false` — it is what marks the auth cookie `Secure` |
+| `CORS_ORIGINS` | Browser origins allowed to call the API |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Optional first administrator, created on startup |
+| `ANTHROPIC_API_KEY` | Optional; without it photos are marked `UNVERIFIED` |
+
+### Two things to plan for
+
+**The auth cookie is `SameSite=Lax`.** A frontend served from a *different*
+origin cannot send it, so the browser will look permanently logged out. Serve
+the frontend from the same origin as the API, or put both behind one domain.
+
+**Uploaded photos are files, not rows.** Compose keeps them in the `uploads`
+volume. On a host with an ephemeral filesystem, mount a persistent disk at
+`/app/uploads` or move `app/core/storage.py` to object storage — everything
+else lives in PostgreSQL and survives on its own.
+
+---
+
 ## 📚 Documentation
 
 | Document | Contents |
