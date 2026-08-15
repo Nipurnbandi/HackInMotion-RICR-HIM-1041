@@ -1,6 +1,10 @@
 # SmartCity API Reference
 
+**Live:** <https://smartcity-y1bu.onrender.com/api> · interactive docs at [`/docs`](https://smartcity-y1bu.onrender.com/docs) · health probe at [`/healthz`](https://smartcity-y1bu.onrender.com/healthz)
+
 Base URL: `/api`. Authentication uses a JWT sent as an HTTP-only cookie (set on login) or a `Authorization: Bearer <token>` header. Role enforcement happens on the backend: citizen endpoints require the `CITIZEN` role, admin endpoints require `ADMIN` — the other role receives `403`.
+
+The API and the web app share one origin, so the browser sends the auth cookie automatically and no CORS configuration is needed.
 
 ## Auth
 
