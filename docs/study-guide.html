@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SmartCity — Study Guide</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+
+  :root{
+    --ink:#14162b; --body:#2f3350; --muted:#6b7192;
+    --indigo:#4f46e5; --cyan:#0e7490; --green:#047857;
+    --amber:#b45309; --red:#b91c1c; --magenta:#a21caf;
+    --line:#dcdff0; --tint:#f5f6fd; --tint2:#eef0fb;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; font-family:"Segoe UI",Calibri,Arial,sans-serif;
+    font-size:10.2pt; line-height:1.5; color:var(--body);
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+
+  /* ---------- cover ---------- */
+  .cover{
+    height:265mm; background:#060913; color:#e7ecff;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 20mm; page-break-after:always; position:relative;
+  }
+  .cover:before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(38% 34% at 12% 12%, rgba(79,70,229,.55), transparent 70%),
+      radial-gradient(34% 30% at 88% 22%, rgba(6,182,212,.35), transparent 70%),
+      radial-gradient(40% 36% at 72% 90%, rgba(217,70,239,.28), transparent 70%);
+  }
+  .cover > *{ position:relative; }
+  .cover .mark{ font-size:44pt; line-height:1; }
+  .cover h1{ font-size:40pt; margin:6mm 0 2mm; letter-spacing:-.5pt; color:#fff; }
+  .cover .sub{ font-size:15pt; color:#7dd3fc; margin-bottom:8mm; }
+  .cover .tag{ font-size:11pt; color:#c7d2fe; font-style:italic; margin-bottom:14mm; }
+  .cover .meta{
+    border-top:1px solid rgba(199,210,254,.35); padding-top:5mm;
+    font-size:9.5pt; color:#a5b4fc;
+  }
+  .cover .meta b{ color:#e7ecff; }
+
+  /* ---------- structure ---------- */
+  .part{ page-break-before:always; }
+  h2{
+    font-size:19pt; color:var(--ink); margin:0 0 1mm;
+    border-bottom:2.5px solid var(--indigo); padding-bottom:2mm;
+  }
+  h2 .num{ color:var(--indigo); }
+  h3{ font-size:13pt; color:var(--ink); margin:7mm 0 2mm; }
+  h4{ font-size:10.8pt; color:var(--indigo); margin:5mm 0 1.5mm; }
+  /* never leave a heading stranded at the foot of a page */
+  h2,h3,h4{ break-after:avoid; page-break-after:avoid; }
+  p{ margin:0 0 2.5mm; }
+  ul,ol{ margin:0 0 3mm; padding-left:5.5mm; }
+  li{ margin-bottom:1.2mm; }
+  code{
+    font-family:Consolas,"Courier New",monospace; font-size:9pt;
+    background:var(--tint2); padding:.4mm 1.2mm; border-radius:2px; color:var(--ink);
+  }
+  a{ color:var(--indigo); text-decoration:none; }
+
+  /* ---------- tables ---------- */
+  table{
+    width:100%; border-collapse:collapse; margin:2mm 0 4mm;
+    font-size:8.9pt; break-inside:avoid;
+  }
+  th{
+    background:var(--indigo); color:#fff; text-align:left;
+    padding:1.8mm 2mm; font-weight:600; font-size:8.7pt;
+  }
+  td{ padding:1.6mm 2mm; border-bottom:1px solid var(--line); vertical-align:top; }
+  tbody tr:nth-child(even){ background:var(--tint); }
+  td code{ font-size:8.3pt; background:transparent; padding:0; color:var(--indigo); }
+  .num-col{ text-align:right; white-space:nowrap; }
+  .ctr{ text-align:center; }
+
+  /* A table too tall for one page may split, repeating its header row. */
+  .longtable{ break-inside:auto; }
+  .longtable thead{ display:table-header-group; }
+  .longtable tr{ break-inside:avoid; }
+
+  /* ---------- blocks ---------- */
+  .why{
+    background:var(--tint); border-left:3.5px solid var(--indigo);
+    padding:2.5mm 3.5mm; margin:3mm 0; break-inside:avoid; font-size:9.4pt;
+  }
+  .why b{ color:var(--indigo); }
+  .warn{ background:#fff7ed; border-left-color:var(--amber); }
+  .warn b{ color:var(--amber); }
+  .formula{
+    background:#0f1226; color:#e7ecff; font-family:Consolas,monospace;
+    font-size:9pt; padding:3mm 4mm; border-radius:3px; margin:2.5mm 0;
+    break-inside:avoid; white-space:pre-wrap; line-height:1.55;
+  }
+  .formula .c{ color:#94a3b8; }
+  .formula .k{ color:#7dd3fc; }
+  .formula .v{ color:#86efac; }
+
+  figure{ margin:4mm 0; break-inside:avoid; text-align:center; }
+  figure img{ width:100%; border:1px solid var(--line); border-radius:3px; }
+  figcaption{ font-size:8.5pt; color:var(--muted); margin-top:1.5mm; font-style:italic; }
+
+  /* A wide diagram gets its own page, rotated, so it is actually legible.
+     Turn the page sideways to read it. */
+  .rotpage{
+    page-break-before:always; page-break-after:always;
+    position:relative; height:262mm;
+  }
+  /* -90deg: the top of the figure sits on the LEFT edge, so the reader turns
+     the page clockwise — the usual convention for landscape plates. */
+  .rotinner{
+    position:absolute; top:50%; left:50%; width:252mm;
+    transform:translate(-50%,-50%) rotate(-90deg);
+  }
+  .rotinner img{
+    display:block; width:100%;
+    border:1px solid var(--line); border-radius:3px;
+  }
+  .rotinner .cap{
+    font-size:9pt; color:var(--muted); font-style:italic;
+    padding-top:2.5mm; text-align:center;
+  }
+  /* keep a big figure with its heading rather than forcing a page break */
+  .fullfig img{ max-height:196mm; width:auto; max-width:100%; }
+
+  .cards{ display:flex; gap:3mm; margin:3mm 0; break-inside:avoid; }
+  .card{
+    flex:1; border:1px solid var(--line); border-top:3px solid var(--indigo);
+    border-radius:3px; padding:2.5mm 3mm; font-size:9pt; background:#fff;
+  }
+  .card h5{ margin:0 0 1.5mm; font-size:10pt; color:var(--ink); }
+  .card.c2{ border-top-color:var(--cyan); }
+  .card.c3{ border-top-color:var(--green); }
+
+  .lead{ font-size:10.6pt; color:var(--ink); }
+  .tocwrap{ column-count:2; column-gap:10mm; font-size:9.4pt; }
+  .toc-h{ font-weight:700; color:var(--indigo); margin:3mm 0 1mm; break-after:avoid; }
+  .toc-i{ margin-left:4mm; color:var(--body); }
+  .pill{
+    display:inline-block; background:var(--tint2); color:var(--indigo);
+    border-radius:8px; padding:.3mm 2mm; font-size:8.2pt; font-weight:600;
+  }
+  .src{ font-size:8.4pt; color:var(--muted); font-style:italic; margin-top:1mm; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ COVER ══════════════════════════ -->
+<section class="cover">
+  <div class="mark">🏙</div>
+  <h1>SmartCity</h1>
+  <div class="sub">Civic Issue Reporting &amp; Resolution Platform</div>
+  <div class="tag">Report it once. Track it live. Hold the city accountable.</div>
+  <p style="max-width:150mm;color:#c7d2fe;font-size:10.5pt;line-height:1.6">
+    A complete study guide to the system: the design approach and the reasoning behind it,
+    the layered architecture, every feature explained with its rules and formulas, and the
+    full database schema.
+  </p>
+  <div class="meta">
+    <b>Team HackInMotion</b> &nbsp;·&nbsp; RICR-HIM-1041<br>
+    FastAPI &nbsp;·&nbsp; React 19 &nbsp;·&nbsp; PostgreSQL &nbsp;·&nbsp; Leaflet/OpenStreetMap &nbsp;·&nbsp; Claude vision<br>
+    169 automated tests &nbsp;·&nbsp; 7 migrations &nbsp;·&nbsp; github.com/Nipurnbandi/HackInMotion-RICR-HIM-1041
+  </div>
+</section>
+
+<!-- ══════════════════════════ CONTENTS ══════════════════════════ -->
+<section class="part">
+<h2><span class="num">§</span> Contents</h2>
+<div class="tocwrap">
+  <div class="toc-h">Part 1 — Overview &amp; Approach</div>
+  <div class="toc-i">1.1 The problem</div>
+  <div class="toc-i">1.2 What the system does</div>
+  <div class="toc-i">1.3 Seven design decisions</div>
+
+  <div class="toc-h">Part 2 — Architecture</div>
+  <div class="toc-i">2.1 The six layers</div>
+  <div class="toc-i">2.2 System diagram</div>
+  <div class="toc-i">2.3 Life of a request</div>
+  <div class="toc-i">2.4 Code layout</div>
+
+  <div class="toc-h">Part 3 — Feature-wise functionality</div>
+  <div class="toc-i">3.1 Authentication &amp; RBAC</div>
+  <div class="toc-i">3.2 Reporting an issue</div>
+  <div class="toc-i">3.3 Photo upload &amp; validation</div>
+  <div class="toc-i">3.4 Duplicate detection ★</div>
+  <div class="toc-i">3.5 Department routing</div>
+  <div class="toc-i">3.6 Priority scoring ★</div>
+  <div class="toc-i">3.7 SLA escalation ★</div>
+  <div class="toc-i">3.8 Lifecycle &amp; audit trail</div>
+  <div class="toc-i">3.9 Resolution, confirm &amp; reopen</div>
+  <div class="toc-i">3.10 Citizen upvoting</div>
+  <div class="toc-i">3.11 Live city map</div>
+  <div class="toc-i">3.12 Analytics &amp; hotspots ★</div>
+  <div class="toc-i">3.13 Transparency scoring ★</div>
+  <div class="toc-i">3.14 AI photo verification</div>
+  <div class="toc-i">3.15 Notifications</div>
+  <div class="toc-i">3.16 Internationalisation</div>
+
+  <div class="toc-h">Part 4 — Database schema</div>
+  <div class="toc-i">4.1 ER diagram</div>
+  <div class="toc-i">4.2 Table-by-table reference</div>
+  <div class="toc-i">4.3 Indexes, constraints, cascades</div>
+  <div class="toc-i">4.4 Enumerations</div>
+  <div class="toc-i">4.5 Migration history</div>
+
+  <div class="toc-h">Part 5 — API surface</div>
+  <div class="toc-h">Part 6 — Revision sheet</div>
+</div>
+
+<div class="why" style="margin-top:8mm">
+  <b>How to use this guide.</b> Part 1 gives you the “why” — read it first, because every
+  later rule follows from one of those decisions. Part 3 is the reference body; each feature
+  states its purpose, its exact rules, and the file that implements it. Part 6 condenses
+  every formula and constant onto one page for last-minute revision.
+  Sections marked ★ contain the original algorithms and are the most likely to be asked about.
+</div>
+</section>
+
+<!-- ══════════════════════════ PART 1 ══════════════════════════ -->
+<section class="part">
+<h2><span class="num">Part 1</span> — Overview &amp; Approach</h2>
+
+<h3>1.1 The problem</h3>
+<p class="lead">
+  Municipal complaint systems fail in four predictable ways. SmartCity is designed
+  around fixing exactly these.
+</p>
+<table>
+  <tr><th style="width:32%">Failure</th><th>What actually happens</th></tr>
+  <tr><td><b>Duplicate flooding</b></td><td>One pothole generates fifteen tickets. Staff spend their time de-duplicating instead of fixing, and the queue length stops meaning anything.</td></tr>
+  <tr><td><b>No feedback loop</b></td><td>The citizen submits into a void — no tracking number, no status, no notification. They assume nothing happened and report again, worsening the first problem.</td></tr>
+  <tr><td><b>Manual triage</b></td><td>A human decides which department owns each complaint and which is urgent. This is slow, inconsistent, and the first thing to collapse under load.</td></tr>
+  <tr><td><b>No accountability</b></td><td>Nobody — citizen, press, or the city itself — can see which department resolves things and which sits on them.</td></tr>
+</table>
+
+<h3>1.2 What the system does</h3>
+<div class="cards">
+  <div class="card">
+    <h5>📱 Citizen Portal</h5>
+    Light theme, phone-first, English + हिन्दी. A five-step report wizard, a live city map to
+    see and upvote what neighbours already reported, and full tracking with the right to
+    confirm or reopen a fix.
+  </div>
+  <div class="card c2">
+    <h5>🖥️ Admin Command Center</h5>
+    Dark, data-dense. A priority-ordered work queue holding <i>one row per real-world problem</i>,
+    the same map in dark tiles, live analytics, and resolution tooling with proof photos.
+  </div>
+  <div class="card c3">
+    <h5>🌍 Public Report Card</h5>
+    No login. Every department scored 0–100 and graded A+ to D from its own resolution
+    record, recomputed on every page load.
+  </div>
+</div>
+
+<h3>1.3 Seven design decisions</h3>
+<p>These are the choices that shape everything else. Understand these and the rest of the
+system is predictable.</p>
+
+<h4>① One case per real-world problem</h4>
+<p>Reports are not tickets. A report joins a <b>case</b>; the case is the unit of work. Fifteen
+reports of one pothole form one case with fifteen reporters — and the reporter count becomes
+a <i>priority signal</i> rather than queue noise. This single decision is why the admin queue is
+short, why priority scoring is meaningful, and why resolving once satisfies everyone.</p>
+
+<h4>② Configuration in data, not in code</h4>
+<p>Category → department routing lives in a database table, not an <code>if/elif</code> chain.
+Adding a category or reorganising departments is an <code>INSERT</code>, not a redeploy.</p>
+
+<h4>③ Per-category constants, not global ones</h4>
+<p>A pothole and a burst water main are not the same shape of problem, so they don't share a
+deduplication radius, a persistence window, an urgency, or a deadline. Five independent
+constants are tuned per category (see <b>§3.4</b>).</p>
+
+<h4>④ Security enforced on the server</h4>
+<p>Every protected route is guarded by a role dependency in FastAPI. The frontend route guard
+is a convenience for UX; it is never the boundary. A citizen calling an admin URL directly
+still gets <code>403</code>.</p>
+
+<h4>⑤ Never block the citizen</h4>
+<p>Geocoding failure, AI unavailability, or a dead mail server must not prevent a report being
+filed. Each of those degrades to a fallback — coordinates instead of an address, an
+<code>UNVERIFIED</code> verdict, a queued retry — and the submission still succeeds.</p>
+
+<h4>⑥ Append-only history</h4>
+<p>Status is a single mutable column, but every change to it appends an immutable row to
+<code>status_history</code>. The current state is cheap to query; the full story is never lost.</p>
+
+<h4>⑦ Accountability is public by default</h4>
+<p>The transparency score is unauthenticated and computed live from the same rows the admins
+work from. There is no separate "public" dataset to massage, and the scoring method is
+printed on the page.</p>
+</section>
+
+<!-- ══════════════════════════ PART 2 ══════════════════════════ -->
+<section class="part">
+<h2><span class="num">Part 2</span> — Architecture</h2>
+
+<h3>2.1 The six layers</h3>
+<table>
+  <tr><th style="width:18%">Layer</th><th style="width:26%">Technology</th><th>Responsibility</th></tr>
+  <tr><td><b>Users</b></td><td>Browser (desktop + mobile)</td><td>Three distinct surfaces: citizen portal, admin command center, public report card.</td></tr>
+  <tr><td><b>Frontend</b></td><td>React 19, Vite, React&nbsp;Router&nbsp;7</td><td>Route guarding, i18n, the Leaflet map component, hand-built SVG charts. Calls the API on a relative <code>/api</code> path.</td></tr>
+  <tr><td><b>API</b></td><td>FastAPI, Pydantic v2</td><td>Four routers — <code>/auth</code>, <code>/citizen</code>, <code>/admin</code>, <code>/public</code>. Validation, auth, and role enforcement live here; business rules do not.</td></tr>
+  <tr><td><b>Domain services</b></td><td>Plain Python</td><td>Where the thinking happens: duplicate detection, routing, priority, SLA, lifecycle, transparency, AI verification, notifications. Framework-free and directly unit-testable.</td></tr>
+  <tr><td><b>Data</b></td><td>PostgreSQL, SQLAlchemy&nbsp;2, Alembic</td><td>Seven tables, seven migrations. All state, including the audit trail.</td></tr>
+  <tr><td><b>External</b></td><td>OSM/CARTO, Nominatim, Claude, SMTP</td><td>Map tiles, geocoding, vision verdicts, email. <i>Every one of them is optional or has a fallback.</i></td></tr>
+</table>
+
+<div class="why">
+  <b>Why a service layer at all?</b> Routers are thin on purpose. <code>find_open_case_id</code>,
+  <code>run_sla_escalations</code> and <code>build_transparency_report</code> take a database session
+  and plain arguments — no request, no response, no framework. That is what makes 110 backend
+  tests fast and makes the rules readable without tracing HTTP plumbing.
+</div>
+
+<h3>2.2 System diagram</h3>
+<p>The full architecture diagram is reproduced on the <b>next page as a full-page plate</b> —
+turn the page clockwise to read it. It shows data flow across all six layers; solid lines are
+direct calls and <b>dotted lines are background tasks and calls to external services</b>.
+Every box corresponds to a real module listed in §2.4.</p>
+
+<div class="rotpage">
+  <div class="rotinner">
+    <img src="../architecture-diagram.png" alt="SmartCity architecture">
+  </div>
+</div>
+
+<h3>2.3 Life of a request — submitting a report</h3>
+<table>
+  <tr><th class="ctr" style="width:7%">#</th><th style="width:24%">Layer</th><th>What happens</th></tr>
+  <tr><td class="ctr">1</td><td>Frontend</td><td>Wizard validates each step client-side; multipart <code>POST /api/citizen/issues</code> with progress tracking.</td></tr>
+  <tr><td class="ctr">2</td><td>API</td><td><code>citizen_only</code> dependency decodes the JWT and asserts the role. Pydantic validates the body; the photo is size- and magic-byte-checked.</td></tr>
+  <tr><td class="ctr">3</td><td>Service</td><td>Photo saved under a generated filename. <b>Duplicate detection</b> runs before the insert.</td></tr>
+  <tr><td class="ctr">4</td><td>Service</td><td>Row inserted; <code>tracking_id</code> and <code>case_id</code> assigned; department resolved from the routing table.</td></tr>
+  <tr><td class="ctr">5</td><td>Data</td><td>Creation entry appended to <code>status_history</code>; a notification row is queued if this is a new case.</td></tr>
+  <tr><td class="ctr">6</td><td>API</td><td>Response returns with the tracking ID — the citizen is done.</td></tr>
+  <tr><td class="ctr">7</td><td>Background</td><td><i>After</i> the response: email delivery is attempted and the photo is sent for AI verification.</td></tr>
+</table>
+<p class="src">Steps 6 and 7 are the important ordering: nothing slow or external sits between the citizen and their confirmation.</p>
+
+<h3>2.4 Code layout</h3>
+<table>
+  <tr><th style="width:38%">Path</th><th>Contents</th></tr>
+  <tr><td><code>backend/app/api/</code></td><td>Routers: <code>auth.py</code>, <code>citizen.py</code>, <code>admin.py</code>, <code>public.py</code></td></tr>
+  <tr><td><code>backend/app/services/</code></td><td>Domain logic: <code>citizen</code>, <code>admin</code>, <code>routing</code>, <code>lifecycle</code>, <code>escalation</code>, <code>votes</code>, <code>transparency</code>, <code>city_map</code>, <code>photo_verification</code>, <code>notification</code></td></tr>
+  <tr><td><code>backend/app/core/</code></td><td><code>config</code>, <code>database</code>, <code>security</code>, <code>dependencies</code> (RBAC), <code>issue_types</code> (the constants), <code>storage</code>, <code>roles</code>, <code>notifier</code></td></tr>
+  <tr><td><code>backend/app/models.py</code></td><td>All seven SQLAlchemy models</td></tr>
+  <tr><td><code>backend/alembic/versions/</code></td><td>Seven migrations, <code>001</code> → <code>007</code></td></tr>
+  <tr><td><code>frontend/src/citizen/</code></td><td>Citizen pages, the report wizard, the location picker</td></tr>
+  <tr><td><code>frontend/src/admin/</code></td><td>Dashboard, analytics panel, admin service</td></tr>
+  <tr><td><code>frontend/src/shared/</code></td><td><code>CityMap</code>, <code>StatusBadge</code>, <code>i18n.jsx</code>, <code>constants.js</code> (colour palettes)</td></tr>
+</table>
+</section>
+
+<!-- ══════════════════════════ PART 3 ══════════════════════════ -->
+<section class="part">
+<h2><span class="num">Part 3</span> — Feature-wise functionality</h2>
+
+<h3>3.1 Authentication &amp; role-based access control</h3>
+<p><b>Purpose.</b> Two roles with genuinely different interfaces and permissions, enforced where it counts.</p>
+<table>
+  <tr><th style="width:34%">Aspect</th><th>Behaviour</th></tr>
+  <tr><td>Password storage</td><td>bcrypt via passlib</td></tr>
+  <tr><td>Token</td><td>JWT (HS256) carrying <code>sub</code>, <code>role</code>, <code>type:"access"</code>, <code>exp</code></td></tr>
+  <tr><td>Transport</td><td>HTTP-only cookie; <code>Authorization: Bearer</code> also accepted</td></tr>
+  <tr><td>Lifetime</td><td>30 minutes by default (<code>ACCESS_TOKEN_EXPIRE_MINUTES</code>)</td></tr>
+  <tr><td>Enforcement</td><td><code>require_roles(...)</code> FastAPI dependency on every protected route</td></tr>
+  <tr><td>Privilege escalation</td><td>Signup ignores any client-supplied role — always <code>CITIZEN</code>. Admins are made by CLI script or startup bootstrap.</td></tr>
+</table>
+<div class="why">
+  <b>Why another citizen's report returns 404, not 403.</b> A <code>403</code> would confirm that the
+  requested tracking ID exists. The lookup therefore treats "doesn't exist" and "isn't yours"
+  identically, so the API cannot be used to enumerate valid IDs. Role mismatches still return
+  <code>403</code> — there is nothing to hide about which endpoints are admin-only.
+</div>
+
+<h3>3.2 Reporting an issue</h3>
+<p><b>Purpose.</b> Get a usable, located, evidenced report from someone standing on a street with one hand free.</p>
+<table>
+  <tr><th class="ctr" style="width:7%">#</th><th style="width:20%">Step</th><th>Validation</th></tr>
+  <tr><td class="ctr">1</td><td>Category</td><td>One of seven enum values</td></tr>
+  <tr><td class="ctr">2</td><td>Location</td><td>Required; latitude −90…90, longitude −180…180. Address auto-filled, optional</td></tr>
+  <tr><td class="ctr">3</td><td>Photo</td><td>Optional — see §3.3</td></tr>
+  <tr><td class="ctr">4</td><td>Description</td><td>Trimmed, <b>10–2000 characters</b></td></tr>
+  <tr><td class="ctr">5</td><td>Review</td><td>Read-only summary; every row links back to its step</td></tr>
+</table>
+<p><b>Two ways to set the location</b>, neither able to hard-fail: the browser Geolocation API
+(high accuracy, 10-second timeout) or tapping/dragging the map pin. Either triggers an
+abortable reverse-geocode; any failure resolves to <code>null</code> and the report proceeds on
+coordinates alone.</p>
+<p><b>On success</b> the server assigns <code>tracking_id</code> = <code>SMC-{year}-{id:06d}</code>,
+a <code>case_id</code>, status <code>SUBMITTED</code>, and a department.</p>
+
+<h3>3.3 Photo upload &amp; validation</h3>
+<table>
+  <tr><th style="width:24%">Check</th><th style="width:40%">Rule</th><th>On failure</th></tr>
+  <tr><td>Non-empty</td><td>File has content</td><td><code>400</code></td></tr>
+  <tr><td>Size</td><td>≤ 5 MB (<code>MAX_UPLOAD_SIZE_BYTES</code>)</td><td><code>413</code></td></tr>
+  <tr><td>Declared type</td><td>JPEG / PNG / WEBP if a <code>Content-Type</code> is sent</td><td><code>400</code></td></tr>
+  <tr><td><b>Actual bytes</b></td><td><b>Magic-byte sniff</b> must match JPEG, PNG or WEBP</td><td><code>400</code></td></tr>
+</table>
+<div class="why">
+  <b>Why sniff the bytes.</b> Extension and <code>Content-Type</code> are both attacker-controlled.
+  A <code>.exe</code> renamed to <code>.jpg</code> with a spoofed header passes every other check and
+  fails this one. Signatures: JPEG <code>FF D8 FF</code>, PNG <code>89 50 4E 47 0D 0A 1A 0A</code>,
+  WEBP <code>RIFF</code>…<code>WEBP</code> at offset 8.
+</div>
+<p><b>Storage.</b> Written to <code>{UPLOAD_DIR}/issues/</code> or <code>/resolutions/</code> under a
+regenerated name (<code>uuid4().hex + token_hex(4) + ext</code>) — the user's filename never touches
+the filesystem, eliminating path traversal and collisions. The storage layer is a
+<code>Protocol</code>, so an S3 backend is one new class.</p>
+
+<h3 style="page-break-before:always">3.4 Duplicate detection &amp; case grouping ★</h3>
+<p><b>Purpose.</b> Collapse many reports of one problem into a single unit of work, without
+losing any reporter's ability to track their own submission.</p>
+
+<h4>Step 1 — bounding box</h4>
+<p>The category's radius in metres is converted to degrees, correcting longitude for latitude convergence:</p>
+<div class="formula"><span class="k">lat_delta</span> = radius_m / 111_320
+<span class="k">lon_delta</span> = radius_m / max(111_320 × cos(latitude), 1.0)</div>
+<p>The <code>cos(latitude)</code> term matters: a degree of longitude spans ~111 km at the equator but
+~96 km at 30° N. Without it the box would be too wide in northern cities. The
+<code>max(…, 1.0)</code> guard prevents division blow-up near the poles.</p>
+
+<h4>Step 2 — candidate query</h4>
+<p>An existing issue matches when <b>all six</b> conditions hold:</p>
+<table>
+  <tr><th style="width:44%">Condition</th><th>Meaning</th></tr>
+  <tr><td>same <code>category</code></td><td>Same kind of problem</td></tr>
+  <tr><td><code>latitude</code> within ± lat_delta</td><td>Inside the box</td></tr>
+  <tr><td><code>longitude</code> within ± lon_delta</td><td>Inside the box</td></tr>
+  <tr><td><code>created_at</code> &gt; now − window</td><td>Recent enough to be the same occurrence</td></tr>
+  <tr><td>status not <code>RESOLVED</code>/<code>REJECTED</code></td><td>A fixed pothole that returns is a <i>new</i> case</td></tr>
+  <tr><td><code>case_id</code> is not null</td><td>Already grouped</td></tr>
+</table>
+<p>Ordered <code>created_at ASC, id ASC</code>, limit 1 — so the <b>oldest</b> case wins and reports always
+attach to the original, never to a later duplicate.</p>
+
+<h4>Step 3 — attach or create</h4>
+<ul>
+  <li><b>Match</b> → <code>case_id</code> = matched case, <code>is_primary = False</code></li>
+  <li><b>No match</b> → <code>case_id</code> = <code>CASE-{own id:06d}</code>, <code>is_primary = True</code></li>
+</ul>
+
+<h4>Consequences of the primary / member split</h4>
+<table>
+  <tr><th style="width:26%">Concern</th><th>Behaviour</th></tr>
+  <tr><td>Admin queue</td><td>Lists <b>primaries only</b> — one row per real-world problem</td></tr>
+  <tr><td>Status</td><td>Members have no independent status; they inherit the primary's <i>effective status</i></td></tr>
+  <tr><td>Citizen view</td><td>Each reporter still sees their own report and tracking ID</td></tr>
+  <tr><td>Resolution</td><td>Resolving the primary satisfies every attached reporter</td></tr>
+  <tr><td>Reopen</td><td>A member reopening reopens the <b>whole case</b></td></tr>
+  <tr><td>Counting</td><td><code>citizen_count</code> = distinct citizens; <code>report_count</code> = total reports</td></tr>
+</table>
+
+<div class="why warn">
+  <b>Known trade-off — this is a rectangle, not a circle.</b> The corners of the bounding box
+  reach ≈1.41× the nominal radius, so a report diagonally 35 m from a pothole can still match a
+  25 m rule. That is deliberate: it is one indexed range query with no per-row trigonometry
+  (backed by <code>ix_issues_dup_lookup</code>), and slight over-matching is the safer error — a
+  wrongly linked report is visible and correctable, while a missed duplicate silently splits a
+  case and re-creates the original problem.
+</div>
+
+<h3>3.5 Department routing</h3>
+<p><b>Purpose.</b> Get each report to its owning team with no human triage step.</p>
+<p><code>resolve_department(db, category)</code> reads the <code>category_routes</code> table (unique on
+category) and falls back to <b>General Administration</b> when no row matches. Seeding is
+idempotent, so it is safe to re-run on every deploy.</p>
+<table>
+  <tr><th style="width:22%">Code</th><th style="width:40%">Name</th><th>Receives</th></tr>
+  <tr><td><code>ROADS</code></td><td>Roads Department</td><td>Pothole</td></tr>
+  <tr><td><code>ELECTRICAL</code></td><td>Electrical &amp; Streetlighting</td><td>Streetlight</td></tr>
+  <tr><td><code>SANITATION</code></td><td>Sanitation Department</td><td>Overflowing Garbage, Illegal Dumping</td></tr>
+  <tr><td><code>WATER</code></td><td>Water &amp; Drainage</td><td>Water Leakage, Broken Drainage</td></tr>
+  <tr><td><code>PUBLIC_WORKS</code></td><td>Public Works</td><td>Damaged Public Property</td></tr>
+  <tr><td><code>GENERAL</code></td><td>General Administration</td><td>Fallback + all SLA escalations</td></tr>
+</table>
+
+<h3>3.6 Priority scoring ★</h3>
+<p><b>Purpose.</b> Order the work queue by real-world impact rather than arrival time.</p>
+<div class="formula"><span class="c">// per case, recomputed on every queue load</span>
+<span class="k">people_affected</span> = citizen_count + vote_count
+<span class="k">priority</span>        = severity_weight × people_affected × (1 + days_open / 7)
+<span class="k">if escalated</span>    → priority × 1.5</div>
+<table>
+  <tr><th style="width:30%">Factor</th><th>Effect</th></tr>
+  <tr><td>Severity weight (2–5)</td><td>A water leak outranks illegal dumping at equal size and age</td></tr>
+  <tr><td>People affected</td><td>Distinct reporters <b>plus upvotes</b> — mass-affecting problems climb</td></tr>
+  <tr><td>Age factor</td><td>+1× per week waited; nothing can be ignored indefinitely</td></tr>
+  <tr><td>Escalation boost</td><td>A breached case outranks comparable un-breached ones</td></tr>
+</table>
+<p><b>Worked example</b> — a 3-day-old water leak (weight 5), 2 reporters, 1 upvote:</p>
+<div class="formula">people_affected = 2 + 1 = 3
+priority = 5 × 3 × (1 + 3/7) = 5 × 3 × 1.4286 = <span class="v">21.4</span>
+after an SLA breach: 21.4 × 1.5 = <span class="v">32.1</span></div>
+<p>The UI colours the badge <b>≥20 high</b>, <b>≥10 medium</b>, else low.</p>
+
+<h3>3.7 SLA escalation ★</h3>
+<p><b>Purpose.</b> Guarantee that an ignored case eventually forces itself onto someone's desk.</p>
+<p>The sweep runs opportunistically on <i>every</i> admin dashboard, analytics and queue request —
+there is no cron job or worker process to keep alive.</p>
+<p><b>A case escalates when all four hold:</b> it is a primary; its status is not closed;
+<code>escalated_at IS NULL</code>; and <code>now ≥ created_at + SLA_DAYS[category]</code>.</p>
+<p><b>Four actions follow:</b></p>
+<ol>
+  <li><code>escalated_at = now</code> — the idempotency guard, so a case escalates <b>exactly once</b> no matter how many times an admin reloads.</li>
+  <li>A history entry naming the breached limit, visible in the reporter's own trail.</li>
+  <li>A notification to General Administration beginning <code>SLA BREACH</code>.</li>
+  <li>The ⚠ badge and the ×1.5 priority multiplier.</li>
+</ol>
+<div class="why">
+  <b>Why opportunistic and not scheduled.</b> A background scheduler is another moving part that
+  can silently die, and on free hosting tiers it may not run at all. Tying the sweep to admin
+  reads means escalation is guaranteed to have happened before anyone <i>looks</i> at the queue —
+  which is the only moment it actually matters. <code>escalated_at</code> makes repeated runs free.
+</div>
+
+<h3>3.8 Lifecycle &amp; audit trail</h3>
+<div class="formula">SUBMITTED → UNDER_REVIEW → IN_PROGRESS → RESOLVED
+      ↓             ↓              ↓
+      └─────────────┴──────────────┴──→ REJECTED
+
+RESOLVED ──(citizen reopens)──→ UNDER_REVIEW</div>
+<table>
+  <tr><th style="width:24%">Status</th><th style="width:44%">Shown to the citizen</th><th>Set by</th></tr>
+  <tr><td><code>SUBMITTED</code></td><td>“We have received your report.”</td><td>System</td></tr>
+  <tr><td><code>UNDER_REVIEW</code></td><td>“A city officer is verifying the details.”</td><td>Admin / citizen reopen</td></tr>
+  <tr><td><code>IN_PROGRESS</code></td><td>“Work has started on this issue.”</td><td>Admin</td></tr>
+  <tr><td><code>RESOLVED</code></td><td>“The issue has been fixed.”</td><td>Admin</td></tr>
+  <tr><td><code>REJECTED</code></td><td>Could not be actioned</td><td>Admin</td></tr>
+</table>
+<div class="why">
+  <b>Why transitions aren't restricted.</b> Real municipal work doesn't advance one step at a
+  time — a crew may fix something the same morning it is reported. Rather than forcing a
+  fictional sequence, the system allows any transition and guarantees instead that
+  <i>every</i> transition is recorded. The audit trail, not the state machine, is the control.
+</div>
+<p><b>Every event appends an immutable row</b> to <code>status_history</code>: old status, new status,
+note, optional photo, and whether a <code>CITIZEN</code> or <code>ADMIN</code> caused it. Recorded events are
+submission, admin status change, resolution note, proof upload, SLA escalation, citizen
+confirmation and citizen reopen. Migration <code>005</code> backfilled a synthetic creation entry for
+pre-existing issues so no report has an empty history.</p>
+<p><b>Case-level assembly:</b> a duplicate reporter sees their own entries <i>plus</i> the shared
+case's entries, merged chronologically — never another reporter's private rows.</p>
+
+<h3>3.9 Resolution evidence, confirm &amp; reopen</h3>
+<p><b>Admin side.</b> A resolution note (≤2000 chars) and a proof-of-resolution photo are two
+independent operations, so a note can be attached while work is still in progress. The photo
+runs the identical validation as citizen uploads and triggers AI verification.</p>
+<p><b>Citizen side.</b> Once the case is <code>RESOLVED</code> the reporter is asked whether it actually
+looks fixed:</p>
+<table>
+  <tr><th style="width:20%">Action</th><th style="width:26%">Status effect</th><th>Recorded as</th></tr>
+  <tr><td><b>Confirm</b></td><td>Unchanged (stays <code>RESOLVED</code>)</td><td>“Reporter confirmed the problem is fixed.”</td></tr>
+  <tr><td><b>Reopen</b></td><td>Back to <code>UNDER_REVIEW</code></td><td>“Reporter reopened the report — the problem is not fixed.”</td></tr>
+</table>
+<p>Both act on the <b>case primary</b>. If any one of five reporters reopens, the case returns to
+the queue for everyone — a fix that didn't work cannot be closed by satisfying one row.
+Attempting either on a non-resolved case returns <code>400</code>.</p>
+<div class="why">
+  <b>Why confirmation isn't a sixth status.</b> Adding <code>VERIFIED</code> would double the states the
+  UI, filters and analytics must handle, to record a fact that is inherently historical.
+  It lives in the audit trail instead — the state machine stays small.
+</div>
+
+<h3>3.10 Citizen upvoting</h3>
+<p><b>Purpose.</b> Let people amplify problems they didn't report, and feed that into prioritisation.</p>
+<table>
+  <tr><th style="width:26%">Rule</th><th>Behaviour</th></tr>
+  <tr><td>Target</td><td>Must be a <b>primary</b> issue; otherwise <code>404</code></td></tr>
+  <tr><td>Self-vote</td><td>Blocked if the citizen has any report in that case — <code>400</code></td></tr>
+  <tr><td>Toggle</td><td>Voting again withdraws the vote — it is a switch, not an increment</td></tr>
+  <tr><td>Uniqueness</td><td><code>UNIQUE(issue_id, citizen_id)</code> — double-submission cannot double-count</td></tr>
+</table>
+
+<h3>3.11 Live city map</h3>
+<p>One component serves both portals, differing only by a <code>theme</code> prop.</p>
+<table>
+  <tr><th style="width:26%">Aspect</th><th>Behaviour</th></tr>
+  <tr><td>Data</td><td>Primary issues with coordinates only — members folded into their case</td></tr>
+  <tr><td>Tiles</td><td>OpenStreetMap (citizen, light) / CARTO Dark Matter (admin, dark)</td></tr>
+  <tr><td>Markers</td><td><code>L.divIcon</code> emoji chips inside a coloured ring</td></tr>
+  <tr><td>Colour modes</td><td>By <b>status</b> or by <b>category</b>, toggled in the toolbar</td></tr>
+  <tr><td>Viewport</td><td>Auto <code>fitBounds</code> over all pins, capped at zoom 16</td></tr>
+  <tr><td>Legend</td><td>Built from what is actually on screen, with live counts</td></tr>
+</table>
+<div class="why">
+  <b>Accessibility.</b> Both palettes were validated for contrast and colour-vision deficiency
+  against the dark surface, and <i>state never rides on hue alone</i>: resolved pins are dimmed
+  and scaled down, rejected pins are hollow with a dashed ring. Status stays readable in
+  greyscale.
+</div>
+
+<h3>3.12 Analytics &amp; hotspot detection ★</h3>
+<p>Every figure is aggregated per request — nothing cached, precomputed or seeded.</p>
+<table>
+  <tr><th style="width:32%">Metric</th><th>Definition</th></tr>
+  <tr><td><code>total_issues</code></td><td>Count of <b>primary</b> issues = real-world problems</td></tr>
+  <tr><td><code>total_reports</code></td><td>Count of <b>all</b> issue rows = submissions</td></tr>
+  <tr><td><code>open_issues</code></td><td>Primaries not <code>RESOLVED</code>/<code>REJECTED</code></td></tr>
+  <tr><td><code>avg_resolution_days</code></td><td>Mean <code>updated_at − created_at</code> over resolved primaries; <code>null</code> if none</td></tr>
+  <tr><td><code>by_category</code> / <code>by_status</code></td><td>Counts <b>including zeros</b>, so chart axes stay stable</td></tr>
+  <tr><td><code>departments</code></td><td>Per-department totals, open, resolved, average; “Unassigned” row only if needed</td></tr>
+</table>
+<p class="src">The gap between <code>total_reports</code> and <code>total_issues</code> is the direct measure of how much noise duplicate detection removed.</p>
+
+<h4>Hotspot algorithm</h4>
+<ol>
+  <li><b>Grid.</b> Round latitude/longitude to <b>3 decimal places</b> → ~110 m × 110 m cells.</li>
+  <li><b>Weight by reports, not cases.</b> One case with six reporters counts as six, correctly outranking three unrelated single-report cases.</li>
+  <li><b>Threshold.</b> Cells with fewer than <b>2 reports</b> are discarded.</li>
+  <li><b>Label.</b> Most common category; address from the <i>most recent</i> issue that has one (older addresses may be stale).</li>
+  <li><b>Rank &amp; cap.</b> By report count then case count; top <b>8</b> returned.</li>
+</ol>
+
+<h3>3.13 Public transparency scoring ★</h3>
+<p><b>Purpose.</b> Make departmental performance externally visible and impossible to quietly massage.</p>
+<div class="formula"><span class="k">score</span> = 100 × ( 0.50 × resolution_rate
+              + 0.30 × on_time_rate
+              + 0.20 × speed_factor )
+
+<span class="k">resolution_rate</span> = resolved ÷ total
+<span class="k">on_time_rate</span>    = resolved within category SLA ÷ resolved
+<span class="k">speed_factor</span>    = max(0, 1 − avg_resolution_days / 14)</div>
+<table>
+  <tr><th class="ctr" style="width:22%">Score</th><th>Grade</th></tr>
+  <tr><td class="ctr">≥ 85</td><td><b>A+</b></td></tr>
+  <tr><td class="ctr">≥ 70</td><td><b>A</b></td></tr>
+  <tr><td class="ctr">≥ 55</td><td><b>B</b></td></tr>
+  <tr><td class="ctr">≥ 40</td><td><b>C</b></td></tr>
+  <tr><td class="ctr">&lt; 40</td><td><b>D</b></td></tr>
+</table>
+<p><b>Two deliberate guards.</b> <code>on_time_rate</code> and <code>speed_factor</code> are <b>0</b> when nothing is
+resolved — a department that never closes anything scores 0 rather than being flattered by an
+empty average. A department with <b>zero cases</b> gets <code>null</code>, rendered “No data”, never an F.</p>
+<p><b>Worked example</b> — one pothole case resolved in 2 days (SLA 7):</p>
+<div class="formula">resolution_rate = 1/1   = 1.0
+on_time_rate    = 1/1   = 1.0        (2 ≤ 7)
+speed_factor    = 1 − 2/14 = 0.857
+score = 100 × (0.5 + 0.3 + 0.2×0.857) = <span class="v">97 → A+</span></div>
+
+<h3>3.14 AI photo verification</h3>
+<p><b>Purpose.</b> Give the reviewing officer a cheap first-pass signal on whether a photo matches its claim.</p>
+<table>
+  <tr><th style="width:24%">Photo</th><th>Question asked</th></tr>
+  <tr><td>Report photo</td><td>“Does this plausibly show a <i>{category}</i>?” — given the description, explicitly tolerant of casual phone framing and lighting</td></tr>
+  <tr><td>Proof photo</td><td>“Does this plausibly show that issue repaired or resolved?”</td></tr>
+</table>
+<p>Verdicts are <code>MATCH</code>, <code>MISMATCH</code> or <code>UNVERIFIED</code>, obtained via a JSON-schema
+structured output (<code>{match, reason}</code>) at low effort, with the reason truncated to 500
+characters and shown as a badge tooltip.</p>
+<div class="why">
+  <b>Failure is total and silent — by design.</b> Missing API key, model refusal, network error
+  or malformed response all resolve to <code>UNVERIFIED</code> with an explanatory note; nothing raises.
+  Both checks run as <b>background tasks</b>, so the HTTP response returns before the model is
+  even called. A report can never be blocked, delayed or rejected by the AI — the verdict is
+  advisory information for a human, not a gate.
+</div>
+
+<h3>3.15 Department notifications</h3>
+<p>Two-phase, so a broken mail server can never fail a citizen's submission.</p>
+<ul>
+  <li><b>Phase 1 (synchronous).</b> A notification row is written when a new <b>primary</b> case is created. Duplicates do not re-notify.</li>
+  <li><b>Phase 2 (background).</b> Every row with <code>sent_at IS NULL</code> is attempted; on success the timestamp is stamped, on failure the row stays pending and the <i>next</i> submission retries it. Delivery is at-least-once and nothing is lost.</li>
+</ul>
+<p><code>NOTIFIER=console</code> logs the email (safe default); <code>email</code> sends via SMTP. The admin inbox
+shows the 50 most recent with an unread count and distinguishes delivered from pending.</p>
+
+<h3>3.16 Internationalisation</h3>
+<p>A dependency-free layer: <code>t(key, fallback)</code> with English fallbacks inline in the components.</p>
+<div class="why">
+  <b>Why fallbacks are inline.</b> A missing translation key returns the English string that sits
+  right there in the JSX — so a partial translation can never render a blank space or a raw
+  <code>key.name</code>. Adding a third language is one dictionary object and zero component changes.
+</div>
+<p>Covered: navigation, dashboard, the full report wizard, categories and hints, statuses and
+descriptions, the timeline, My Reports, issue details, activity history, confirm/reopen
+prompts, the map toolbar/legend/popups, and AI verification notes. Persisted in
+<code>localStorage</code>; unreadable storage falls back to English without error.</p>
+</section>
+
+<!-- ══════════════════════════ PART 4 ══════════════════════════ -->
+<section class="part">
+<h2><span class="num">Part 4</span> — Database schema</h2>
+<p class="lead">PostgreSQL, seven tables, accessed through SQLAlchemy 2 and evolved with seven
+Alembic migrations. Every table carries <code>created_at</code> and <code>updated_at</code> from a shared
+<code>TimestampMixin</code>.</p>
+
+<h3>4.1 Entity–relationship diagram</h3>
+<figure class="fullfig">
+  <img src="er-diagram.png" alt="Entity relationship diagram">
+  <figcaption>All seven tables with their columns, keys and relationships. Note the
+  self-relationship on <code>issues</code>: <code>case_id</code> groups duplicate reports into one case.
+  Column-level detail follows in §4.2.</figcaption>
+</figure>
+
+<h3 style="page-break-before:always">4.2 Table-by-table reference</h3>
+
+<h4>users</h4>
+<table>
+  <tr><th style="width:24%">Column</th><th style="width:22%">Type</th><th>Notes</th></tr>
+  <tr><td><code>id</code></td><td>Integer</td><td>PK, autoincrement</td></tr>
+  <tr><td><code>email</code></td><td>String(255)</td><td><b>Unique</b>, indexed — the login identifier</td></tr>
+  <tr><td><code>hashed_password</code></td><td>String(255)</td><td>bcrypt hash; the plaintext is never stored</td></tr>
+  <tr><td><code>role</code></td><td>Enum</td><td><code>CITIZEN</code> (default) or <code>ADMIN</code>; non-native enum → stored as VARCHAR</td></tr>
+  <tr><td><code>created_at</code> / <code>updated_at</code></td><td>DateTime(tz)</td><td>Server defaults; <code>updated_at</code> auto-updates</td></tr>
+</table>
+
+<h4>issues — the central table (reports <i>and</i> cases)</h4>
+<table class="longtable">
+  <thead>
+    <tr><th style="width:30%">Column</th><th style="width:20%">Type</th><th>Notes</th></tr>
+  </thead>
+  <tr><td><code>id</code></td><td>Integer</td><td>PK</td></tr>
+  <tr><td><code>tracking_id</code></td><td>String(32)</td><td><b>Unique</b>, indexed. <code>SMC-{year}-{id:06d}</code></td></tr>
+  <tr><td><code>citizen_id</code></td><td>Integer FK</td><td>→ <code>users.id</code>, <b>ON DELETE CASCADE</b>, indexed</td></tr>
+  <tr><td><code>title</code></td><td>String(255)</td><td>Derived from the category label</td></tr>
+  <tr><td><code>category</code></td><td>Enum</td><td>7 values, <b>indexed</b>; drives radius, window, severity, SLA, routing</td></tr>
+  <tr><td><code>description</code></td><td>Text</td><td>10–2000 characters (validated at the schema layer)</td></tr>
+  <tr><td><code>latitude</code> / <code>longitude</code></td><td>Float, nullable</td><td>Part of the composite dedup index</td></tr>
+  <tr><td><code>address</code></td><td>String(500), nullable</td><td>Reverse-geocoded; null when lookup failed</td></tr>
+  <tr><td><code>photo_url</code></td><td>String(500), nullable</td><td>Public URL of the stored evidence photo</td></tr>
+  <tr><td><code>photo_verdict</code></td><td>String(20), nullable</td><td><code>MATCH</code> / <code>MISMATCH</code> / <code>UNVERIFIED</code></td></tr>
+  <tr><td><code>photo_verdict_note</code></td><td>Text</td><td>One-sentence AI reason (≤500 chars)</td></tr>
+  <tr><td><code>status</code></td><td>Enum</td><td>5 values, <b>indexed</b>. Members inherit the primary's effective status</td></tr>
+  <tr><td><code>resolution_note</code></td><td>Text</td><td>Admin's description of the fix; visible to the reporter</td></tr>
+  <tr><td><code>resolution_photo_url</code></td><td>String(500), nullable</td><td>Proof-of-resolution image</td></tr>
+  <tr><td><code>resolution_photo_verdict</code></td><td>String(20), nullable</td><td>AI verdict on the proof photo</td></tr>
+  <tr><td><code>resolution_photo_verdict_note</code></td><td>Text</td><td>AI reason for the proof verdict</td></tr>
+  <tr><td><code>escalated_at</code></td><td>DateTime(tz), nullable</td><td><b>SLA idempotency guard</b> — non-null means already escalated</td></tr>
+  <tr><td><code>case_id</code></td><td>String(32), nullable</td><td><b>Indexed.</b> <code>CASE-{id:06d}</code> — the duplicate-grouping key</td></tr>
+  <tr><td><code>is_primary</code></td><td>Boolean</td><td>Default true. Primaries appear in the admin queue and on the map</td></tr>
+  <tr><td><code>department_id</code></td><td>Integer FK, nullable</td><td>→ <code>departments.id</code>, indexed</td></tr>
+</table>
+
+<h4>status_history — append-only audit trail</h4>
+<table>
+  <tr><th style="width:28%">Column</th><th style="width:22%">Type</th><th>Notes</th></tr>
+  <tr><td><code>issue_id</code></td><td>Integer FK</td><td>→ <code>issues.id</code>, <b>CASCADE</b>, indexed</td></tr>
+  <tr><td><code>old_status</code></td><td>Enum, nullable</td><td>Null on the creation entry</td></tr>
+  <tr><td><code>new_status</code></td><td>Enum</td><td>Equals <code>old_status</code> for note-only / photo-only events</td></tr>
+  <tr><td><code>note</code></td><td>Text</td><td>Human-readable description of the event</td></tr>
+  <tr><td><code>photo_url</code></td><td>String(500), nullable</td><td>Set when the event carried a photo</td></tr>
+  <tr><td><code>changed_by_role</code></td><td>Enum</td><td><code>CITIZEN</code> → “Reporter”, <code>ADMIN</code> → “City administration”</td></tr>
+</table>
+
+<h4>issue_votes</h4>
+<table>
+  <tr><th style="width:28%">Column</th><th style="width:22%">Type</th><th>Notes</th></tr>
+  <tr><td><code>issue_id</code></td><td>Integer FK</td><td>→ <code>issues.id</code>, CASCADE, indexed</td></tr>
+  <tr><td><code>citizen_id</code></td><td>Integer FK</td><td>→ <code>users.id</code>, CASCADE, indexed</td></tr>
+  <tr><td colspan="3"><code>UNIQUE(issue_id, citizen_id)</code> — <code>uq_issue_votes_issue_citizen</code>. Enforces one vote per citizen per case at the database level, so a double-submitted request cannot double-count.</td></tr>
+</table>
+
+<h4>departments &amp; category_routes</h4>
+<table>
+  <tr><th style="width:22%">Table</th><th style="width:26%">Column</th><th>Notes</th></tr>
+  <tr><td rowspan="3"><code>departments</code></td><td><code>code</code></td><td><b>Unique</b>, indexed — <code>ROADS</code>, <code>WATER</code>, …</td></tr>
+  <tr><td><code>name</code></td><td>Display name</td></tr>
+  <tr><td><code>email</code></td><td>Notification recipient</td></tr>
+  <tr><td rowspan="2"><code>category_routes</code></td><td><code>category</code></td><td><b>Unique</b> — at most one route per category</td></tr>
+  <tr><td><code>department_id</code></td><td>FK → <code>departments.id</code></td></tr>
+</table>
+
+<h4>notifications</h4>
+<table>
+  <tr><th style="width:28%">Column</th><th style="width:22%">Type</th><th>Notes</th></tr>
+  <tr><td><code>department_id</code></td><td>Integer FK</td><td>→ <code>departments.id</code>, indexed</td></tr>
+  <tr><td><code>issue_id</code></td><td>Integer FK</td><td>→ <code>issues.id</code>, CASCADE</td></tr>
+  <tr><td><code>message</code></td><td>Text</td><td>Full email body</td></tr>
+  <tr><td><code>is_read</code></td><td>Boolean</td><td>Inbox read state, default false</td></tr>
+  <tr><td><code>sent_at</code></td><td>DateTime(tz), nullable</td><td><b>Null = pending</b> — the retry queue marker</td></tr>
+</table>
+
+<h3>4.3 Indexes, constraints &amp; cascades</h3>
+<table>
+  <tr><th style="width:34%">Object</th><th>Purpose</th></tr>
+  <tr><td><code>ix_issues_dup_lookup</code><br><span class="src">(category, latitude, longitude)</span></td><td><b>The performance-critical one.</b> Backs the duplicate-detection range query so it never scans the table</td></tr>
+  <tr><td><code>ix_issues_case_id</code></td><td>Case grouping — assembling all reports of a case</td></tr>
+  <tr><td><code>ix_issues_status</code>, <code>ix_issues_category</code></td><td>Queue filters and analytics aggregation</td></tr>
+  <tr><td><code>ix_issues_department_id</code></td><td>Department-filtered queue</td></tr>
+  <tr><td><code>uq_issue_votes_issue_citizen</code></td><td>One vote per citizen per case</td></tr>
+  <tr><td>Unique: <code>users.email</code>, <code>issues.tracking_id</code>, <code>departments.code</code>, <code>category_routes.category</code></td><td>Identity and routing integrity</td></tr>
+</table>
+<p><b>Cascade behaviour.</b> Deleting a user deletes their issues (ORM <code>delete-orphan</code> plus a
+database-level <code>ON DELETE CASCADE</code>). Deleting an issue deletes its history rows, votes and
+notifications. Departments are never cascade-deleted — they are reference data.</p>
+
+<h3>4.4 Enumerations</h3>
+<p>All enums use <code>native_enum=False</code>, so they are stored as VARCHAR with a check constraint
+rather than a PostgreSQL <code>TYPE</code>.</p>
+<div class="why">
+  <b>Why avoid native enums.</b> Altering a native PostgreSQL enum requires <code>ALTER TYPE</code>,
+  which is awkward inside a transactional migration and cannot easily remove a value. Storing
+  strings keeps every migration a plain, reversible column operation — worth far more during
+  rapid iteration than the few bytes a native enum saves.
+</div>
+<table>
+  <tr><th style="width:22%">Enum</th><th>Values</th></tr>
+  <tr><td><code>role</code></td><td><code>CITIZEN</code>, <code>ADMIN</code></td></tr>
+  <tr><td><code>issue_status</code></td><td><code>SUBMITTED</code>, <code>UNDER_REVIEW</code>, <code>IN_PROGRESS</code>, <code>RESOLVED</code>, <code>REJECTED</code></td></tr>
+  <tr><td><code>issue_category</code></td><td><code>STREETLIGHT</code>, <code>POTHOLE</code>, <code>GARBAGE_OVERFLOW</code>, <code>WATER_LEAKAGE</code>, <code>DAMAGED_PUBLIC_PROPERTY</code>, <code>ILLEGAL_DUMPING</code>, <code>BROKEN_DRAINAGE</code></td></tr>
+</table>
+
+<h3>4.5 Migration history</h3>
+<table>
+  <tr><th class="ctr" style="width:14%">Revision</th><th>What it added</th></tr>
+  <tr><td class="ctr"><code>001</code></td><td>Initial <code>users</code> and <code>issues</code></td></tr>
+  <tr><td class="ctr"><code>002</code></td><td>Civic issue fields — category, geolocation, photo, tracking ID</td></tr>
+  <tr><td class="ctr"><code>003</code></td><td>Case grouping — <code>case_id</code>, <code>is_primary</code>, the dedup index</td></tr>
+  <tr><td class="ctr"><code>004</code></td><td>Departments, category routes, notifications — <i>seeds the six departments and seven routes</i></td></tr>
+  <tr><td class="ctr"><code>005</code></td><td>Status history + resolution evidence — <i>backfills a creation entry for every existing issue</i></td></tr>
+  <tr><td class="ctr"><code>006</code></td><td><code>escalated_at</code> and the <code>issue_votes</code> table</td></tr>
+  <tr><td class="ctr"><code>007</code></td><td>AI photo-verification verdict columns</td></tr>
+</table>
+</section>
+
+<!-- ══════════════════════════ PART 5 ══════════════════════════ -->
+<section class="part">
+<h2><span class="num">Part 5</span> — API surface</h2>
+<p>Base path <code>/api</code>. JWT via HTTP-only cookie or bearer header. Citizen routes reject
+admins and vice versa.</p>
+
+<h3>Authentication</h3>
+<table>
+  <tr><th style="width:10%">Method</th><th style="width:30%">Path</th><th>Purpose</th></tr>
+  <tr><td><code>POST</code></td><td><code>/auth/signup</code></td><td>Create a citizen account (role escalation blocked)</td></tr>
+  <tr><td><code>POST</code></td><td><code>/auth/login</code></td><td>Authenticate; sets the auth cookie</td></tr>
+  <tr><td><code>POST</code></td><td><code>/auth/logout</code></td><td>Clear the cookie</td></tr>
+  <tr><td><code>GET</code></td><td><code>/auth/me</code></td><td>Current user identity and role</td></tr>
+</table>
+
+<h3>Citizen</h3>
+<table>
+  <tr><th style="width:10%">Method</th><th style="width:34%">Path</th><th>Purpose</th></tr>
+  <tr><td><code>GET</code></td><td><code>/citizen/dashboard</code></td><td>Greeting, per-status stats, recent reports</td></tr>
+  <tr><td><code>GET</code></td><td><code>/citizen/map</code></td><td>All active cases for the live map (with vote state)</td></tr>
+  <tr><td><code>GET</code></td><td><code>/citizen/issues</code></td><td>Own reports — <code>status</code>, <code>search</code>, <code>page</code>, <code>page_size</code></td></tr>
+  <tr><td><code>GET</code></td><td><code>/citizen/issues/stats</code></td><td>Own per-status counts</td></tr>
+  <tr><td><code>POST</code></td><td><code>/citizen/issues</code></td><td><b>Submit a report</b> (multipart) — runs dedup + routing</td></tr>
+  <tr><td><code>GET</code></td><td><code>/citizen/issues/{id}</code></td><td>One report <b>with full status history</b></td></tr>
+  <tr><td><code>POST</code></td><td><code>/citizen/issues/{id}/confirm</code></td><td>Confirm the fix</td></tr>
+  <tr><td><code>POST</code></td><td><code>/citizen/issues/{id}/reopen</code></td><td>Reopen the whole case</td></tr>
+  <tr><td><code>POST</code></td><td><code>/citizen/issues/{id}/vote</code></td><td>Toggle an upvote</td></tr>
+</table>
+
+<h3>Admin</h3>
+<table>
+  <tr><th style="width:10%">Method</th><th style="width:34%">Path</th><th>Purpose</th></tr>
+  <tr><td><code>GET</code></td><td><code>/admin/dashboard</code></td><td>Headline totals <span class="pill">runs SLA sweep</span></td></tr>
+  <tr><td><code>GET</code></td><td><code>/admin/analytics</code></td><td>All metrics + hotspots <span class="pill">runs SLA sweep</span></td></tr>
+  <tr><td><code>GET</code></td><td><code>/admin/map</code></td><td>All active cases for the dark map</td></tr>
+  <tr><td><code>GET</code></td><td><code>/admin/departments</code></td><td>Departments with open-case counts</td></tr>
+  <tr><td><code>GET</code></td><td><code>/admin/issues</code></td><td><b>Work queue</b>, priority-sorted <span class="pill">runs SLA sweep</span></td></tr>
+  <tr><td><code>PUT</code></td><td><code>/admin/issues/{id}</code></td><td>Update status / title / description / resolution note</td></tr>
+  <tr><td><code>POST</code></td><td><code>/admin/issues/{id}/resolution-photo</code></td><td>Upload proof of resolution</td></tr>
+  <tr><td><code>DELETE</code></td><td><code>/admin/issues/{id}</code></td><td>Remove a report</td></tr>
+  <tr><td><code>GET</code></td><td><code>/admin/notifications</code></td><td>Inbox with unread count and delivery state</td></tr>
+  <tr><td><code>POST</code></td><td><code>/admin/notifications/{id}/read</code></td><td>Mark as read</td></tr>
+</table>
+
+<h3>Public — no authentication</h3>
+<table>
+  <tr><th style="width:10%">Method</th><th style="width:34%">Path</th><th>Purpose</th></tr>
+  <tr><td><code>GET</code></td><td><code>/public/transparency</code></td><td>Live department report card with methodology</td></tr>
+</table>
+</section>
+
+<!-- ══════════════════════════ PART 6 ══════════════════════════ -->
+<section class="part">
+<h2><span class="num">Part 6</span> — Revision sheet</h2>
+<p class="lead">Everything worth memorising, on one spread.</p>
+
+<h3>The master constants table</h3>
+<p>Five independent behavioural constants per category — the heart of the system.</p>
+<table>
+  <tr>
+    <th>Category</th><th class="num-col">Dedup radius</th><th class="num-col">Dedup window</th>
+    <th class="ctr">Severity</th><th class="num-col">SLA</th><th>Department</th>
+  </tr>
+  <tr><td>Pothole</td><td class="num-col">25 m</td><td class="num-col">60 d</td><td class="ctr">4</td><td class="num-col">7 d</td><td>Roads</td></tr>
+  <tr><td>Streetlight</td><td class="num-col">30 m</td><td class="num-col">45 d</td><td class="ctr">3</td><td class="num-col">7 d</td><td>Electrical</td></tr>
+  <tr><td>Damaged Public Property</td><td class="num-col">30 m</td><td class="num-col">60 d</td><td class="ctr">3</td><td class="num-col">10 d</td><td>Public Works</td></tr>
+  <tr><td>Overflowing Garbage</td><td class="num-col">50 m</td><td class="num-col">3 d</td><td class="ctr">2</td><td class="num-col">2 d</td><td>Sanitation</td></tr>
+  <tr><td>Illegal Dumping</td><td class="num-col">60 m</td><td class="num-col">7 d</td><td class="ctr">2</td><td class="num-col">4 d</td><td>Sanitation</td></tr>
+  <tr><td>Water Leakage</td><td class="num-col">80 m</td><td class="num-col">10 d</td><td class="ctr">5</td><td class="num-col">3 d</td><td>Water &amp; Drainage</td></tr>
+  <tr><td>Broken Drainage</td><td class="num-col">80 m</td><td class="num-col">30 d</td><td class="ctr">5</td><td class="num-col">5 d</td><td>Water &amp; Drainage</td></tr>
+</table>
+<p class="src">Read across a row: a burst main is detected over a wide area (80 m), assumed to persist
+only 10 days, is maximally severe (5), and must be fixed in 3 days. A pothole is the opposite
+profile on every axis except severity.</p>
+
+<h3>Every formula</h3>
+<div class="formula"><span class="c">— duplicate detection —</span>
+lat_delta = radius_m / 111_320
+lon_delta = radius_m / max(111_320 × cos(latitude), 1.0)
+
+<span class="c">— priority score (admin queue order) —</span>
+priority = severity × (reporters + votes) × (1 + days_open / 7)
+           × 1.5 if SLA-breached
+
+<span class="c">— transparency score (public report card) —</span>
+score = 100 × (0.50×resolution_rate + 0.30×on_time_rate + 0.20×speed_factor)
+speed_factor = max(0, 1 − avg_resolution_days / 14)
+grades: 85+ A+ · 70+ A · 55+ B · 40+ C · else D
+
+<span class="c">— hotspots —</span>
+cell = round(lat, 3), round(lon, 3)      <span class="c">≈110 m grid</span>
+keep cells with ≥ 2 reports, rank by reports, take top 8</div>
+
+<h3>Numbers to remember</h3>
+<table>
+  <tr><th style="width:26%">Value</th><th>Meaning</th></tr>
+  <tr><td><b>10 – 2000</b></td><td>Description length, characters</td></tr>
+  <tr><td><b>5 MB</b></td><td>Maximum photo size; JPEG / PNG / WEBP only, verified by magic bytes</td></tr>
+  <tr><td><b>30 minutes</b></td><td>Default JWT lifetime</td></tr>
+  <tr><td><b>111,320</b></td><td>Metres per degree of latitude — the dedup conversion constant</td></tr>
+  <tr><td><b>×1.5</b></td><td>Priority multiplier on an SLA breach</td></tr>
+  <tr><td><b>14 days</b></td><td>Speed-score baseline in the transparency formula</td></tr>
+  <tr><td><b>3 dp / 2 / 8</b></td><td>Hotspot grid precision, minimum reports, maximum returned</td></tr>
+  <tr><td><b>50 / 30 / 20</b></td><td>Transparency weights (%): resolution, on-time, speed</td></tr>
+  <tr><td><b>7 / 7 / 169</b></td><td>Tables, migrations, automated tests</td></tr>
+</table>
+
+<h3>Likely exam questions</h3>
+<table>
+  <tr><th style="width:46%">Question</th><th>One-line answer</th></tr>
+  <tr><td>How do you stop duplicate reports?</td><td>Per-category radius + time window + open-status check groups them into one case; the reporter count then <i>raises</i> priority.</td></tr>
+  <tr><td>Why is the dedup box rectangular?</td><td>One indexed range query, no per-row trigonometry; over-matching is the safer failure.</td></tr>
+  <tr><td>How is routing extensible?</td><td>It's a database table, not code — a new category is an <code>INSERT</code>.</td></tr>
+  <tr><td>What stops an escalation firing repeatedly?</td><td>The <code>escalated_at</code> timestamp — the sweep only selects rows where it is null.</td></tr>
+  <tr><td>Where is authorisation enforced?</td><td>Server-side FastAPI dependencies; the frontend guard is UX only.</td></tr>
+  <tr><td>What if the AI or the mail server is down?</td><td>Nothing fails — <code>UNVERIFIED</code> verdict, or a pending row retried on the next submission.</td></tr>
+  <tr><td>Can a department game the public score?</td><td>No — it is computed live from the same rows they work, and rejecting instead of resolving lowers the resolution rate.</td></tr>
+  <tr><td>Who decides a case is really fixed?</td><td>The reporter — confirm, or reopen the entire case for everyone.</td></tr>
+</table>
+</section>
+
+</body>
+</html>

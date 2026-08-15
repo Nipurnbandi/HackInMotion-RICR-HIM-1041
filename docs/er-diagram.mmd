@@ -1,0 +1,95 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "background": "#ffffff",
+    "primaryColor": "#eef2ff",
+    "primaryTextColor": "#1e1b4b",
+    "primaryBorderColor": "#4f46e5",
+    "lineColor": "#4f46e5",
+    "fontFamily": "Segoe UI, sans-serif",
+    "fontSize": "14px"
+  }
+}}%%
+erDiagram
+    USERS ||--o{ ISSUES : "reports (cascade delete)"
+    USERS ||--o{ ISSUE_VOTES : "casts"
+    ISSUES ||--o{ ISSUE_VOTES : "receives"
+    ISSUES ||--o{ STATUS_HISTORY : "audited by"
+    ISSUES ||--o{ NOTIFICATIONS : "triggers"
+    ISSUES }o--|| DEPARTMENTS : "assigned to"
+    DEPARTMENTS ||--o{ CATEGORY_ROUTES : "receives category"
+    DEPARTMENTS ||--o{ NOTIFICATIONS : "notified"
+    ISSUES ||--o{ ISSUES : "case_id groups duplicates"
+
+    USERS {
+        int id PK
+        string email UK "indexed"
+        string hashed_password "bcrypt"
+        enum role "citizen/admin"
+        datetime created_at
+        datetime updated_at
+    }
+
+    ISSUES {
+        int id PK
+        string tracking_id UK "SMC-YYYY-NNN"
+        int citizen_id FK "-> users.id"
+        string title
+        enum category "7 types, indexed"
+        text description "10-2000 chars"
+        float latitude "idx w/ category"
+        float longitude "idx w/ category"
+        string address "nullable"
+        string photo_url
+        string photo_verdict "3 verdicts"
+        text photo_verdict_note
+        enum status "5 states, indexed"
+        text resolution_note
+        string resolution_photo_url
+        string resolution_photo_verdict
+        text resolution_photo_verdict_note
+        datetime escalated_at "SLA breach stamp"
+        string case_id "CASE-NNNNNN"
+        bool is_primary "case leader?"
+        int department_id FK "-> departments.id"
+    }
+
+    STATUS_HISTORY {
+        int id PK
+        int issue_id FK "cascade delete"
+        enum old_status "null on creation"
+        enum new_status
+        text note
+        string photo_url
+        enum changed_by_role "citizen/admin"
+        datetime created_at
+    }
+
+    ISSUE_VOTES {
+        int id PK
+        int issue_id FK "cascade delete"
+        int citizen_id FK "cascade delete"
+        datetime created_at
+    }
+
+    DEPARTMENTS {
+        int id PK
+        string code UK "ROADS, WATER"
+        string name
+        string email
+    }
+
+    CATEGORY_ROUTES {
+        int id PK
+        enum category UK "one per category"
+        int department_id FK
+    }
+
+    NOTIFICATIONS {
+        int id PK
+        int department_id FK
+        int issue_id FK "cascade delete"
+        text message
+        bool is_read
+        datetime sent_at "null = pending"
+    }
