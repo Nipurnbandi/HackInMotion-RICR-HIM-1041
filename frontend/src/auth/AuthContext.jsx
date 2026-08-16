@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     await api.login(email, password);
     const me = await refreshUser();
-    return getDashboardPath(me.role);
+    return getDashboardPath(me?.role);
   }, [refreshUser]);
 
   const signup = useCallback(async (email, password) => {

@@ -14,7 +14,7 @@ function formatDate(value) {
 export default function IssueCard({ issue }) {
   const location =
     issue.address ||
-    (issue.latitude != null
+    (issue.latitude != null && issue.longitude != null
       ? `${issue.latitude.toFixed(4)}, ${issue.longitude.toFixed(4)}`
       : "Location not recorded");
 
